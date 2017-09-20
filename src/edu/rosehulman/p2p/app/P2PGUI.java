@@ -65,8 +65,8 @@ import edu.rosehulman.p2p.protocol.IProtocol;
  * @author rupakhet
  *
  */
-public class P2PGUI
-		implements IActivityListener, IConnectionListener, IDownloadListener, IListingListener, IRequestLogListener, IFoundListener {
+public class P2PGUI implements IActivityListener, IConnectionListener, IDownloadListener, IListingListener,
+		IRequestLogListener, IFoundListener {
 	JFrame frame;
 	JPanel contentPane;
 
@@ -361,7 +361,7 @@ public class P2PGUI
 				thread.start();
 			}
 		});
-		
+
 		this.searchResultListModel = new DefaultListModel<>();
 		this.searchResultList = new JList<>(this.searchResultListModel);
 		this.searchResultScrollPane = new JScrollPane(this.searchResultList);
@@ -418,6 +418,7 @@ public class P2PGUI
 
 	@Override
 	public void activityPerformed(String fileName, IHost foundAt) {
-		this.searchResultListModel.addElement(foundAt);
+		if (!this.searchResultListModel.contains(foundAt))
+			this.searchResultListModel.addElement(foundAt);
 	}
 }
