@@ -346,6 +346,7 @@ public class P2PGUI
 							JOptionPane.ERROR_MESSAGE);
 					return;
 				}
+				searchResultListModel.clear();
 				Thread thread = new Thread() {
 					public void run() {
 						try {
