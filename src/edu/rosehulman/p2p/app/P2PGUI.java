@@ -52,6 +52,7 @@ import edu.rosehulman.p2p.impl.Host;
 import edu.rosehulman.p2p.impl.notification.IActivityListener;
 import edu.rosehulman.p2p.impl.notification.IConnectionListener;
 import edu.rosehulman.p2p.impl.notification.IDownloadListener;
+import edu.rosehulman.p2p.impl.notification.IFoundListener;
 import edu.rosehulman.p2p.impl.notification.IListingListener;
 import edu.rosehulman.p2p.impl.notification.IRequestLogListener;
 import edu.rosehulman.p2p.protocol.IConnectionMonitor;
@@ -64,7 +65,8 @@ import edu.rosehulman.p2p.protocol.IProtocol;
  * @author rupakhet
  *
  */
-public class P2PGUI implements IActivityListener, IConnectionListener, IDownloadListener, IListingListener, IRequestLogListener {
+public class P2PGUI
+		implements IActivityListener, IConnectionListener, IDownloadListener, IListingListener, IRequestLogListener, IFoundListener {
 	JFrame frame;
 	JPanel contentPane;
 
@@ -72,7 +74,7 @@ public class P2PGUI implements IActivityListener, IConnectionListener, IDownload
 	JTextField hostNameField;
 	JTextField portField;
 	JButton connectButton;
-	
+
 	JPanel peersPanel;
 	JScrollPane peerListScrollPane;
 	JList<IHost> peerList;
@@ -90,28 +92,27 @@ public class P2PGUI implements IActivityListener, IConnectionListener, IDownload
 	JScrollPane requestLogScrollPane;
 	DefaultListModel<String> requestLogListModel;
 	JList<String> requestLogList;
-	
-	
+
 	JPanel searchFilePanel;
-	JTextField searchTermField;
+	JTextField searchTermField, depthField;
 	JButton searchButton;
-	JList<String> searchResultList;
-	DefaultListModel<String> searchResultListModel;
+	JList<IHost> searchResultList;
+	DefaultListModel<IHost> searchResultListModel;
 	JScrollPane searchResultScrollPane;
 	JButton downloadAfterSearch;
-	
+
 	JPanel networkMapPanel;
-	
+
 	IP2PMediator mediator;
 	IConnectionMonitor connectionMonitor;
-	
+
 	public P2PGUI(JFrame mainFrame, IP2PMediator mediator, IConnectionMonitor connectionMonitor) {
 		this.frame = mainFrame;
 		this.mediator = mediator;
 		this.connectionMonitor = connectionMonitor;
 		this.initGUI();
 	}
-	
+
 	public void show() {
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
@@ -119,20 +120,20 @@ public class P2PGUI implements IActivityListener, IConnectionListener, IDownload
 				connectionMonitor.stop();
 			}
 		});
-		
+
 		// Position the window to the center of the screen
 		frame.pack();
 		final Toolkit toolkit = Toolkit.getDefaultToolkit();
-	    final Dimension screenSize = toolkit.getScreenSize();
-	    final int x = (screenSize.width - frame.getWidth()) / 2;
-	    final int y = (screenSize.height - frame.getHeight()) / 2;
-	    frame.setLocation(x, y);
+		final Dimension screenSize = toolkit.getScreenSize();
+		final int x = (screenSize.width - frame.getWidth()) / 2;
+		final int y = (screenSize.height - frame.getHeight()) / 2;
+		frame.setLocation(x, y);
 	}
-	
+
 	private void initGUI() {
 		frame.setTitle("Rose P2P App (" + IProtocol.PROTOCOL + ") - Localhost [" + mediator.getLocalHost() + "]");
 		this.contentPane = (JPanel) frame.getContentPane();
-		
+
 		this.configurePeersPanel();
 		this.createNetworkMapPanel();
 		this.createSearchPanel();
@@ -143,7 +144,7 @@ public class P2PGUI implements IActivityListener, IConnectionListener, IDownload
 		this.contentPane.add(this.searchFilePanel, BorderLayout.EAST);
 		this.contentPane.add(this.statusPanel, BorderLayout.SOUTH);
 	}
-	
+
 	private void configurePeersPanel() {
 		this.peersPanel = new JPanel(new BorderLayout());
 		this.peersPanel.setBorder(BorderFactory.createTitledBorder("Remote Connections"));
@@ -170,34 +171,30 @@ public class P2PGUI implements IActivityListener, IConnectionListener, IDownload
 					String host = hostNameField.getText();
 					int port = Integer.parseInt(portField.getText());
 					final IHost remoteHost = new Host(host, port);
-					
+
 					Thread runner = new Thread() {
 						public void run() {
 							postStatus("Trying to connect to " + remoteHost + " ...");
 							try {
-								if(mediator.requestAttach(remoteHost)) {
+								if (mediator.requestAttach(remoteHost)) {
 									postStatus("Connected to " + remoteHost);
-								}
-								else {
+								} else {
 									postStatus("Could not connect to " + remoteHost + ". Please try again!");
 								}
-							}
-							catch(Exception exp) {
+							} catch (Exception exp) {
 								postStatus("An error occured while connecting: " + exp.getMessage());
 							}
 						}
 					};
 					runner.start();
-				}
-				catch(Exception ex) {
+				} catch (Exception ex) {
 					postStatus("Connection could not be established: " + ex.getMessage());
 				}
 			}
 		});
-		
-		
+
 		this.peersPanel.add(this.newConnectionPanel, BorderLayout.NORTH);
-		
+
 		JPanel peerListPanel = new JPanel(new BorderLayout());
 		peerListPanel.add(new JLabel("List of Peers", JLabel.CENTER), BorderLayout.NORTH);
 		this.peerListModel = new DefaultListModel<>();
@@ -207,36 +204,37 @@ public class P2PGUI implements IActivityListener, IConnectionListener, IDownload
 		this.listFileButton = new JButton("List Files");
 		this.disconnectButton = new JButton("Disconnect");
 		peerListPanel.add(this.peerListScrollPane, BorderLayout.CENTER);
-		
+
 		JPanel buttonPanel = new JPanel(new GridLayout());
 		buttonPanel.add(disconnectButton);
 		buttonPanel.add(listFileButton);
 		peerListPanel.add(buttonPanel, BorderLayout.SOUTH);
-		
+
 		this.disconnectButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				IHost remoteHost = peerList.getSelectedValue();
-				if(remoteHost == null) {
-					JOptionPane.showMessageDialog(frame, "You must first select a peer from the list above!", "P2P Error", JOptionPane.ERROR_MESSAGE);
+				if (remoteHost == null) {
+					JOptionPane.showMessageDialog(frame, "You must first select a peer from the list above!",
+							"P2P Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				try {
 					mediator.requestDetach(remoteHost);
 					postStatus("Disconnected from " + remoteHost + "!");
-				}
-				catch(Exception ex) {
+				} catch (Exception ex) {
 					postStatus("Error disconnecting to " + remoteHost + "!");
 				}
 			}
 		});
-		
+
 		this.listFileButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				final IHost remoteHost = peerList.getSelectedValue();
-				if(remoteHost == null) {
-					JOptionPane.showMessageDialog(frame, "You must first select a peer from the list above!", "P2P Error", JOptionPane.ERROR_MESSAGE);
+				if (remoteHost == null) {
+					JOptionPane.showMessageDialog(frame, "You must first select a peer from the list above!",
+							"P2P Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				Thread thread = new Thread() {
@@ -244,8 +242,7 @@ public class P2PGUI implements IActivityListener, IConnectionListener, IDownload
 						try {
 							mediator.requestList(remoteHost);
 							postStatus("File listing request sent to " + remoteHost + "!");
-						}
-						catch(Exception e) {
+						} catch (Exception e) {
 							postStatus("Error sending list request to " + remoteHost + "!");
 						}
 					}
@@ -253,7 +250,7 @@ public class P2PGUI implements IActivityListener, IConnectionListener, IDownload
 				thread.start();
 			}
 		});
-		
+
 		JPanel fileListPanel = new JPanel(new BorderLayout());
 		fileListPanel.add(new JLabel("List of files in the selected peer", JLabel.CENTER), BorderLayout.NORTH);
 		this.fileListModel = new DefaultListModel<>();
@@ -263,14 +260,16 @@ public class P2PGUI implements IActivityListener, IConnectionListener, IDownload
 		this.downloadDirect = new JButton("Download the selected file");
 		fileListPanel.add(this.fileListingPane, BorderLayout.CENTER);
 		fileListPanel.add(this.downloadDirect, BorderLayout.SOUTH);
-		
+
 		this.downloadDirect.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				final IHost remoteHost = peerList.getSelectedValue();
 				final String fileName = fileList.getSelectedValue();
-				if(remoteHost == null || fileName == null) {
-					JOptionPane.showMessageDialog(frame, "You must have a peer and a file selected from the lists above!", "P2P Error", JOptionPane.ERROR_MESSAGE);
+				if (remoteHost == null || fileName == null) {
+					JOptionPane.showMessageDialog(frame,
+							"You must have a peer and a file selected from the lists above!", "P2P Error",
+							JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				Thread thread = new Thread() {
@@ -278,8 +277,7 @@ public class P2PGUI implements IActivityListener, IConnectionListener, IDownload
 						try {
 							mediator.requestGet(remoteHost, fileName);
 							postStatus("Getting file " + fileName + " from " + remoteHost + "...");
-						}
-						catch(Exception e) {
+						} catch (Exception e) {
 							postStatus("Error sending the get file request to " + remoteHost + "!");
 						}
 					}
@@ -287,12 +285,11 @@ public class P2PGUI implements IActivityListener, IConnectionListener, IDownload
 				thread.start();
 			}
 		});
-		
-		
+
 		this.peersPanel.add(peerListPanel, BorderLayout.WEST);
 		this.peersPanel.add(fileListPanel, BorderLayout.CENTER);
 	}
-	
+
 	private void createStatusPanel() {
 		this.statusPanel = new JPanel(new BorderLayout());
 		this.statusPanel.setBorder(BorderFactory.createTitledBorder("Activity"));
@@ -304,25 +301,24 @@ public class P2PGUI implements IActivityListener, IConnectionListener, IDownload
 		panel.add(new JLabel("Activity Log", JLabel.CENTER), BorderLayout.NORTH);
 		panel.add(this.statusScrollPane, BorderLayout.CENTER);
 		this.statusPanel.add(panel, BorderLayout.CENTER);
-		
 
 		panel = new JPanel(new BorderLayout());
 		this.requestLogListModel = new DefaultListModel<>();
 		this.requestLogList = new JList<>(this.requestLogListModel);
 		this.requestLogScrollPane = new JScrollPane(this.requestLogList);
-		
+
 		panel.add(new JLabel("Request Log", JLabel.CENTER), BorderLayout.NORTH);
 		panel.add(this.requestLogScrollPane, BorderLayout.CENTER);
 		this.statusPanel.add(panel, BorderLayout.EAST);
 	}
-	
+
 	private void createNetworkMapPanel() {
 		this.networkMapPanel = new JPanel(new BorderLayout());
 		this.networkMapPanel.setBorder(BorderFactory.createTitledBorder("Network Graph"));
-		
+
 		this.networkMapPanel.add(new JLabel("Shown the network graph (Bonus) ..."));
 	}
-	
+
 	private void createSearchPanel() {
 		this.searchFilePanel = new JPanel(new BorderLayout());
 		this.searchFilePanel.setBorder(BorderFactory.createTitledBorder("Network File Searching"));
@@ -330,17 +326,47 @@ public class P2PGUI implements IActivityListener, IConnectionListener, IDownload
 		JPanel top = new JPanel();
 		top.add(new JLabel("Search Term: "));
 		this.searchTermField = new JTextField("");
-		this.searchTermField.setColumns(15);
+		this.searchTermField.setColumns(10);
 		this.searchButton = new JButton("Search Network");
 		top.add(this.searchTermField);
+		top.add(new JLabel("Depth: "));
+		this.depthField = new JTextField("");
+		this.depthField.setColumns(7);
+		top.add(this.depthField);
 		top.add(this.searchButton);
+
+		this.searchButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				final String fileName = searchTermField.getText();
+				final Integer depth = Integer.parseInt(depthField.getText());
+				if (fileName == null || fileName == null) {
+					JOptionPane.showMessageDialog(frame,
+							"You must have a peer and a file selected from the lists above!", "P2P Error",
+							JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				Thread thread = new Thread() {
+					public void run() {
+						try {
+							mediator.find(fileName, depth, "");
+							postStatus("Getting file " + fileName + " from " + fileName + "...");
+						} catch (Exception e) {
+							e.printStackTrace();
+							postStatus("Error sending the get file request to " + fileName + "! ");
+						}
+					}
+				};
+				thread.start();
+			}
+		});
 		
 		this.searchResultListModel = new DefaultListModel<>();
 		this.searchResultList = new JList<>(this.searchResultListModel);
 		this.searchResultScrollPane = new JScrollPane(this.searchResultList);
-		
+
 		this.downloadAfterSearch = new JButton("Download the selected file");
-		
+
 		this.searchFilePanel.add(top, BorderLayout.NORTH);
 		this.searchFilePanel.add(this.searchResultScrollPane, BorderLayout.CENTER);
 		this.searchFilePanel.add(this.downloadAfterSearch, BorderLayout.SOUTH);
@@ -350,7 +376,7 @@ public class P2PGUI implements IActivityListener, IConnectionListener, IDownload
 	public void requestLogChanged(Collection<IPacket> packets) {
 		this.requestLogListModel.clear();
 		int i = 0;
-		for(IPacket p : packets) {
+		for (IPacket p : packets) {
 			this.requestLogListModel.addElement(++i + " : " + p.getCommand() + " => " + p.getObject());
 		}
 	}
@@ -359,12 +385,13 @@ public class P2PGUI implements IActivityListener, IConnectionListener, IDownload
 	public void listingReceived(IHost host, List<String> listing) {
 		this.postStatus("File listing received from " + host + "!");
 		this.fileListModel.clear();
-		for(String f: listing) {
+		for (String f : listing) {
 			this.fileListModel.addElement(f);
 		}
 	}
 
-	@Override	public void downloadComplete(IHost host, String file) {
+	@Override
+	public void downloadComplete(IHost host, String file) {
 		this.postStatus("Download of " + file + " from " + host + " complete!");
 	}
 
@@ -382,9 +409,14 @@ public class P2PGUI implements IActivityListener, IConnectionListener, IDownload
 	public void activityPerformed(String message, IPacket p) {
 		this.postStatus(message + p.getCommand());
 	}
-	
+
 	private void postStatus(String msg) {
 		this.statusTextArea.append(msg + IProtocol.LF);
-		this.statusTextArea.setCaretPosition(this.statusTextArea.getDocument().getLength());		
+		this.statusTextArea.setCaretPosition(this.statusTextArea.getDocument().getLength());
+	}
+
+	@Override
+	public void activityPerformed(String fileName, IHost foundAt) {
+		this.searchResultListModel.addElement(foundAt);
 	}
 }

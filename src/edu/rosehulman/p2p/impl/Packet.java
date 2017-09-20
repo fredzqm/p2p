@@ -38,11 +38,10 @@ import edu.rosehulman.p2p.protocol.IResponseHandler;
 import edu.rosehulman.p2p.protocol.P2PException;
 
 public class Packet implements IPacket {
-	String protocol;
-	String command;
-	String object;
+	private String protocol;
+	private String command;
+	private String object;
 	
-	int size;
 	Map<String, String> headers;
 	
 	public Packet() {

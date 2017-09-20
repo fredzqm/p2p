@@ -22,66 +22,39 @@
  * THE SOFTWARE.
  */
 
-package edu.rosehulman.p2p.impl;
+package edu.rosehulman.p2p.impl.handlers;
 
+import java.io.InputStream;
+
+import edu.rosehulman.p2p.impl.Host;
+import edu.rosehulman.p2p.protocol.AbstractHandler;
 import edu.rosehulman.p2p.protocol.IHost;
+import edu.rosehulman.p2p.protocol.IP2PMediator;
+import edu.rosehulman.p2p.protocol.IPacket;
 import edu.rosehulman.p2p.protocol.IProtocol;
+import edu.rosehulman.p2p.protocol.IRequestHandler;
+import edu.rosehulman.p2p.protocol.P2PException;
 
-public class Host implements IHost {
-	private String host;
-	private int port;
+/**
+ * @author zhangq2
+ *
+ */
+public class FoundRequestHandler extends AbstractHandler implements IRequestHandler {
 
-	public Host(String host, int port) {
-		this.host = host;
-		this.port = port;
-	}
-
-	public Host(String hostStr) {
-		int index = hostStr.indexOf(IProtocol.SEPERATOR);
-		this.host = hostStr.substring(0, index);
-		this.port = Integer.parseInt(hostStr.substring(index + 1));
+	public FoundRequestHandler(IP2PMediator mediator) {
+		super(mediator);
 	}
 
 	@Override
-	public String getHostAddress() {
-		return host;
-	}
-
-	@Override
-	public int getPort() {
-		return port;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((host == null) ? 0 : host.hashCode());
-		result = prime * result + port;
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Host other = (Host) obj;
-		if (host == null) {
-			if (other.host != null)
-				return false;
-		} else if (!host.equals(other.host))
-			return false;
-		if (port != other.port)
-			return false;
-		return true;
-	}
-
-	@Override
-	public String toString() {
-		return host + IProtocol.SEPERATOR + port;
+	public void handle(IPacket packet, InputStream in) throws P2PException {
+		String fileName = packet.getHeader(IProtocol.FILE_NAME);
+		String tracePath = packet.getHeader(IProtocol.TRACElIST);
+		IHost foundAt = new Host(packet.getHeader(IProtocol.FOUNDAT));
+		
+		if (tracePath.length() == 0) {
+			this.mediator.fireFoundFile(fileName, foundAt);
+		} else {
+			this.mediator.found(fileName, foundAt, tracePath);
+		}
 	}
 }

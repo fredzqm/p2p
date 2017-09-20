@@ -31,7 +31,7 @@ public interface IProtocol {
 	public static final String LF = "\n";
 	public static final String CRLF = "\r\n";
 	public static final String CHAR_SET = "UTF-8";
-	public static final String SEPERATOR = ":";
+	public static final char SEPERATOR = ':';
 	public static final String SPACE = " ";
 	
 	public static final String PROTOCOL = "P2P1.0";
@@ -53,6 +53,10 @@ public interface IProtocol {
 	public static final String PUT = "PUT";
 	
 	public static final String FIND = "FIND";
+	public static final String FOUND = "FOUND";
+	public static final String DEPTH = "DEPTH";
+	public static final String TRACElIST = "TRACELIST";
+	public static final String FOUNDAT = "FOUNDAT";
 
 	public static final String HOST = "Host";
 	public static final String PORT = "Port";

@@ -29,6 +29,8 @@ import javax.swing.JFrame;
 import edu.rosehulman.p2p.impl.ConnectionMonitor;
 import edu.rosehulman.p2p.impl.P2PMediator;
 import edu.rosehulman.p2p.impl.Protocol;
+import edu.rosehulman.p2p.impl.handlers.FindRequestHandler;
+import edu.rosehulman.p2p.impl.handlers.FoundRequestHandler;
 import edu.rosehulman.p2p.impl.handlers.GetRequestHandler;
 import edu.rosehulman.p2p.impl.handlers.ListRequestHandler;
 import edu.rosehulman.p2p.impl.handlers.ListingRequestHandler;
@@ -65,6 +67,8 @@ public class P2PApp {
 		protocol.setResponseHandler(IProtocol.PUT, new PutResponseHandler(mediator));
 		protocol.setRequestHandler(IProtocol.LIST, new ListRequestHandler(mediator));
 		protocol.setRequestHandler(IProtocol.LISTING, new ListingRequestHandler(mediator));
+		protocol.setRequestHandler(IProtocol.FIND, new FindRequestHandler(mediator));
+		protocol.setRequestHandler(IProtocol.FOUND, new FoundRequestHandler(mediator));
 		
 		// Let's start a connection monitor that listens for incoming connection request
 		IConnectionMonitor connectionMonitor = new ConnectionMonitor(mediator);
@@ -78,6 +82,7 @@ public class P2PApp {
 		mediator.addDownloadListener(gui);
 		mediator.addListingListener(gui);
 		mediator.addRequestLogListener(gui);
+		mediator.addFoundListener(gui);
 
 		// Show the gui
 		gui.show();

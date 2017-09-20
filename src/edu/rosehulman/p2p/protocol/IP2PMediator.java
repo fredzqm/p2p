@@ -30,6 +30,7 @@ import java.util.List;
 import edu.rosehulman.p2p.impl.notification.IActivityListener;
 import edu.rosehulman.p2p.impl.notification.IConnectionListener;
 import edu.rosehulman.p2p.impl.notification.IDownloadListener;
+import edu.rosehulman.p2p.impl.notification.IFoundListener;
 import edu.rosehulman.p2p.impl.notification.IListingListener;
 import edu.rosehulman.p2p.impl.notification.IRequestLogListener;
 
@@ -51,7 +52,8 @@ public interface IP2PMediator {
 	public void requestDetach(IHost host) throws P2PException;
 
 	public void discover(int depth) throws P2PException;
-	public void find(String searchTerm, int depth) throws P2PException;
+	public void find(String searchFile, int depth, String pathList) throws P2PException;
+	public void found(String fileName, IHost foundAt, String prevTracePath) throws P2PException;
 
 	public void requestList(IHost host) throws P2PException;	
 	public void requestListing(IHost remoteHost, int seqNum) throws P2PException;
@@ -64,6 +66,7 @@ public interface IP2PMediator {
 	public void addRequestLogListener(IRequestLogListener l);
 	public void addConnectionListener(IConnectionListener l);
 	public void addActivityListener(IActivityListener l);
+	void addFoundListener(IFoundListener l);
 	
 	
 	public void fireDownloadComplete(IHost host, String file);
@@ -72,4 +75,5 @@ public interface IP2PMediator {
 	public void fireConnected(IHost host);
 	public void fireDisconnected(IHost host);
 	public void fireActivityPerformed(String message, IPacket p);
+	public void fireFoundFile(String fileName, IHost foundAt);
 }
