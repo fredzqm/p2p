@@ -29,7 +29,7 @@ package edu.rosehulman.p2p.protocol;
  * @author Chandan R. Rupakheti (chandan.rupakheti@rose-hulman.edu)
  *
  */
-public class P2PException extends Exception {
+public class P2PException extends RuntimeException {
 	private static final long serialVersionUID = 742540479605343333L;
 
 	public P2PException() {

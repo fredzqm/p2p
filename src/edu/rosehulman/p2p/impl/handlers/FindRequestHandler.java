@@ -27,6 +27,8 @@ package edu.rosehulman.p2p.impl.handlers;
 import java.io.File;
 import java.io.InputStream;
 
+import edu.rosehulman.p2p.impl.notification.FindEvent;
+import edu.rosehulman.p2p.impl.notification.FoundPacketEvent;
 import edu.rosehulman.p2p.protocol.AbstractHandler;
 import edu.rosehulman.p2p.protocol.IP2PMediator;
 import edu.rosehulman.p2p.protocol.IPacket;
@@ -49,14 +51,14 @@ public class FindRequestHandler extends AbstractHandler implements IRequestHandl
 		String fileName = packet.getHeader(IProtocol.FILE_NAME);
 		String tracePath = packet.getHeader(IProtocol.TRACElIST);
 		int depth = Integer.parseInt(packet.getHeader(IProtocol.DEPTH));
-		
+
 		if (depth > 0) {
-			this.mediator.find(fileName, depth-1, tracePath);
+			this.mediator.fireEvent(new FindEvent(fileName, depth - 1, tracePath));
 		}
-		
+
 		File file = new File(this.mediator.getRootDirectory(), fileName);
 		if (file.exists()) {
-			this.mediator.found(fileName, this.mediator.getLocalHost(), tracePath);
+			this.mediator.fireEvent(new FoundPacketEvent(fileName, this.mediator.getLocalhost(), tracePath));
 		}
 	}
 }
