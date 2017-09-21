@@ -33,13 +33,13 @@ import java.io.OutputStream;
  *
  */
 public interface IPacket {
-	public String getProtocol();
-	public String getCommand();
-	public String getObject();
+	String getProtocol();
+	String getCommand();
+	String getObject();
 	
-	public String getHeader(String key);
-	public void setHeader(String key, String value); 
+	String getHeader(String key);
+	void setHeader(String key, String value);
 	
-	public void fromStream(InputStream in) throws P2PException;
-	public void toStream(OutputStream out) throws P2PException;	
+	void fromStream(InputStream in) throws P2PException;
+	void toStream(OutputStream out) throws P2PException;
 }

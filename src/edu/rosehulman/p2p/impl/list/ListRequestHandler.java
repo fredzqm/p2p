@@ -80,8 +80,8 @@ public class ListRequestHandler extends AbstractHandler implements IRequestHandl
 			reqPacket.setHeader(IProtocol.SEQ_NUM, seqNum + "");
 			reqPacket.setHeader(IProtocol.PAYLOAD_SIZE, payload.length + "");
 
+			monitor.send(reqPacket);
 			OutputStream out = monitor.getOutputStream();
-			reqPacket.toStream(out);
 			out.write(payload);
 		} catch (Exception e) {
 			throw new P2PException(e);

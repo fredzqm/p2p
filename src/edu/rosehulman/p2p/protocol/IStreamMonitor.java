@@ -30,8 +30,9 @@ import java.net.Socket;
 
 public interface IStreamMonitor extends Runnable {
 	Socket getSocket();
-	InputStream getInputStream();
-	OutputStream getOutputStream();
+	void send(IPacket packet);
 	void run();
 	void stop();
+
+    OutputStream getOutputStream();
 }

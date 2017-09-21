@@ -32,6 +32,6 @@ public class ListAction implements IEventHandler<ListAction> {
         packet.setHeader(IProtocol.SEQ_NUM, seqNum + "");
 
         mediator.logRequest(seqNum, packet);
-        packet.toStream(monitor.getOutputStream());
+        monitor.send(packet);
     }
 }

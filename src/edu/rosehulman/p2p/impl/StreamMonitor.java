@@ -62,8 +62,9 @@ public class StreamMonitor implements IStreamMonitor {
 		return this.socket;
 	}
 
-	public InputStream getInputStream() {
-		return this.in;
+	@Override
+	public void send(IPacket packet) {
+		packet.toStream(getOutputStream());
 	}
 
 	public OutputStream getOutputStream() {
