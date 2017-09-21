@@ -29,9 +29,9 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 public interface IStreamMonitor extends Runnable {
-	public Socket getSocket();
-	public InputStream getInputStream();
-	public OutputStream getOutputStream();
-	public void run();
-	public void stop();
+	Socket getSocket();
+	InputStream getInputStream();
+	OutputStream getOutputStream();
+	void run();
+	void stop();
 }

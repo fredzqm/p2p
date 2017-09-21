@@ -1,4 +1,4 @@
-package edu.rosehulman.p2p.impl.notification;
+package edu.rosehulman.p2p.impl.find;
 
 import edu.rosehulman.p2p.impl.Host;
 import edu.rosehulman.p2p.impl.IEventHandler;
@@ -13,13 +13,13 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class FoundPacketEvent implements IEventHandler<FoundPacketEvent> {
+public class FoundEvent implements IEventHandler<FoundEvent> {
     private String fileName;
     private IHost foundAt;
     private String traceList;
 
     @Override
-    public void handleEvent(IP2PMediator mediator, FoundPacketEvent event) {
+    public void handleEvent(IP2PMediator mediator, FoundEvent event) {
         assert this == event;
 
         int index = traceList.lastIndexOf('|');

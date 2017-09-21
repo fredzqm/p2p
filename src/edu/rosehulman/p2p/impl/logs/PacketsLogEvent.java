@@ -1,4 +1,4 @@
-package edu.rosehulman.p2p.impl.notification;
+package edu.rosehulman.p2p.impl.logs;
 
 import java.util.Collection;
 
@@ -8,6 +8,6 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class RequestLogEvent {
+public class PacketsLogEvent {
 	private Collection<IPacket> packates;
 }

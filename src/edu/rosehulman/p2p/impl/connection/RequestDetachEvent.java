@@ -1,4 +1,4 @@
-package edu.rosehulman.p2p.impl.notification;
+package edu.rosehulman.p2p.impl.connection;
 
 import edu.rosehulman.p2p.impl.IEventHandler;
 import edu.rosehulman.p2p.impl.Packet;

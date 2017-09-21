@@ -1,4 +1,4 @@
-package edu.rosehulman.p2p.impl.notification;
+package edu.rosehulman.p2p.impl.connection;
 
 import java.net.Socket;
 import java.util.logging.Level;

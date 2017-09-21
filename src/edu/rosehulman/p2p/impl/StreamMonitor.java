@@ -31,7 +31,7 @@ import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.rosehulman.p2p.impl.notification.RequestDetachEvent;
+import edu.rosehulman.p2p.impl.connection.RequestDetachEvent;
 import edu.rosehulman.p2p.protocol.IHost;
 import edu.rosehulman.p2p.protocol.IP2PMediator;
 import edu.rosehulman.p2p.protocol.IPacket;
@@ -76,7 +76,7 @@ public class StreamMonitor implements IStreamMonitor {
 			IPacket packet = new Packet();
 			try {
 				packet.fromStream(this.in);
-				// Note that there are handlers configured in TransportProtocol that
+				// Note that there are find configured in TransportProtocol that
 				// kick-in within the packet.fromStream() method to handle the
 				// packet further
 			} catch (P2PException e) {

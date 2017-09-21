@@ -26,6 +26,7 @@ package edu.rosehulman.p2p.protocol;
 
 import java.io.InputStream;
 
-public interface IRequestHandler extends IHandler {
-	public void handle(IPacket packet, InputStream in) throws P2PException;
+public interface IRequestHandler {
+
+	void handle(IPacket packet, InputStream in) throws P2PException;
 }

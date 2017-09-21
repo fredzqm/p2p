@@ -1,4 +1,4 @@
-package edu.rosehulman.p2p.impl.handlers;
+package edu.rosehulman.p2p.impl.download;
 
 import java.io.File;
 import java.io.InputStream;

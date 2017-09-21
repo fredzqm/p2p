@@ -1,4 +1,4 @@
-package edu.rosehulman.p2p.impl.notification;
+package edu.rosehulman.p2p.impl.find;
 
 import edu.rosehulman.p2p.impl.IEventHandler;
 import edu.rosehulman.p2p.impl.Packet;
@@ -12,16 +12,16 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class FindEvent implements IEventHandler<FindEvent> {
+public class FindAction implements IEventHandler<FindAction> {
 	private String fileName;
 	private int depth;
 	private String traceList;
 
 	@Override
-	public void handleEvent(IP2PMediator mediator, FindEvent findEvent) {
-		String traceList = findEvent.getTraceList();
-		String fileName = findEvent.getFileName();
-		int depth = findEvent.getDepth();
+	public void handleEvent(IP2PMediator mediator, FindAction findAction) {
+		String traceList = findAction.getTraceList();
+		String fileName = findAction.getFileName();
+		int depth = findAction.getDepth();
 
 		for (IHost remoteHost : mediator.getPeerHosts()) {
 			IStreamMonitor monitor = mediator.getIStreamMonitor(remoteHost);

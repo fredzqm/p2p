@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package edu.rosehulman.p2p.impl.handlers;
+package edu.rosehulman.p2p.impl.download;
 
 import java.io.FileInputStream;
 import java.io.OutputStream;

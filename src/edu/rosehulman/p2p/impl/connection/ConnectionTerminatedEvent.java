@@ -1,6 +1,4 @@
-package edu.rosehulman.p2p.impl.notification;
-
-import java.util.List;
+package edu.rosehulman.p2p.impl.connection;
 
 import edu.rosehulman.p2p.protocol.IHost;
 import lombok.AllArgsConstructor;
@@ -8,7 +6,6 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class ListingEvent {
+public class ConnectionTerminatedEvent {
 	private IHost host;
-	private List<String> listings;
 }

@@ -22,41 +22,69 @@
  * THE SOFTWARE.
  */
 
-package edu.rosehulman.p2p.impl.handlers;
+package edu.rosehulman.p2p.impl.list;
 
+import java.io.File;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 import edu.rosehulman.p2p.impl.Host;
-import edu.rosehulman.p2p.impl.notification.FoundEvent;
-import edu.rosehulman.p2p.impl.notification.FoundPacketEvent;
+import edu.rosehulman.p2p.impl.Packet;
 import edu.rosehulman.p2p.protocol.AbstractHandler;
 import edu.rosehulman.p2p.protocol.IHost;
 import edu.rosehulman.p2p.protocol.IP2PMediator;
 import edu.rosehulman.p2p.protocol.IPacket;
 import edu.rosehulman.p2p.protocol.IProtocol;
 import edu.rosehulman.p2p.protocol.IRequestHandler;
+import edu.rosehulman.p2p.protocol.IStreamMonitor;
 import edu.rosehulman.p2p.protocol.P2PException;
 
 /**
- * @author zhangq2
+ * @author rupakhet
  *
  */
-public class FoundRequestHandler extends AbstractHandler implements IRequestHandler {
+public class ListRequestHandler extends AbstractHandler implements IRequestHandler {
 
-	public FoundRequestHandler(IP2PMediator mediator) {
+	public ListRequestHandler(IP2PMediator mediator) {
 		super(mediator);
 	}
 
 	@Override
 	public void handle(IPacket packet, InputStream in) throws P2PException {
-		String fileName = packet.getHeader(IProtocol.FILE_NAME);
-		String tracePath = packet.getHeader(IProtocol.TRACElIST);
-		IHost foundAt = new Host(packet.getHeader(IProtocol.FOUNDAT));
+		int seqNum = Integer.parseInt(packet.getHeader(IProtocol.SEQ_NUM));
+		String host = packet.getHeader(IProtocol.HOST);
+		int port = Integer.parseInt(packet.getHeader(IProtocol.PORT));
+		IHost remoteHost = new Host(host, port);
+		
+		IStreamMonitor monitor = mediator.getIStreamMonitor(remoteHost);
 
-		if (tracePath.length() == 0) {
-			this.mediator.fireEvent(new FoundEvent(fileName, foundAt));
-		} else {
-			this.mediator.fireEvent(new FoundPacketEvent(fileName, foundAt, tracePath));
+		if (monitor == null) {
+			throw new P2PException("No connection exists to " + remoteHost);
+		}
+
+		StringBuilder builder = new StringBuilder();
+		File dir = new File(mediator.getRootDirectory());
+		for (File f : dir.listFiles()) {
+			if (f.isFile()) {
+				builder.append(f.getName());
+				builder.append(IProtocol.CRLF);
+			}
+		}
+
+		try {
+			byte[] payload = builder.toString().getBytes(IProtocol.CHAR_SET);
+
+			IPacket reqPacket = new Packet(IProtocol.PROTOCOL, IProtocol.LISTING, remoteHost.toString());
+			reqPacket.setHeader(IProtocol.HOST, mediator.getLocalhost().getHostAddress());
+			reqPacket.setHeader(IProtocol.PORT, mediator.getLocalhost().getPort() + "");
+			reqPacket.setHeader(IProtocol.SEQ_NUM, seqNum + "");
+			reqPacket.setHeader(IProtocol.PAYLOAD_SIZE, payload.length + "");
+
+			OutputStream out = monitor.getOutputStream();
+			reqPacket.toStream(out);
+			out.write(payload);
+		} catch (Exception e) {
+			throw new P2PException(e);
 		}
 	}
 }

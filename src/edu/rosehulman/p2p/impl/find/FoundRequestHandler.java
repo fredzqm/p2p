@@ -22,14 +22,13 @@
  * THE SOFTWARE.
  */
 
-package edu.rosehulman.p2p.impl.handlers;
+package edu.rosehulman.p2p.impl.find;
 
-import java.io.File;
 import java.io.InputStream;
 
-import edu.rosehulman.p2p.impl.notification.FindEvent;
-import edu.rosehulman.p2p.impl.notification.FoundPacketEvent;
+import edu.rosehulman.p2p.impl.Host;
 import edu.rosehulman.p2p.protocol.AbstractHandler;
+import edu.rosehulman.p2p.protocol.IHost;
 import edu.rosehulman.p2p.protocol.IP2PMediator;
 import edu.rosehulman.p2p.protocol.IPacket;
 import edu.rosehulman.p2p.protocol.IProtocol;
@@ -40,9 +39,9 @@ import edu.rosehulman.p2p.protocol.P2PException;
  * @author zhangq2
  *
  */
-public class FindRequestHandler extends AbstractHandler implements IRequestHandler {
+public class FoundRequestHandler extends AbstractHandler implements IRequestHandler {
 
-	public FindRequestHandler(IP2PMediator mediator) {
+	public FoundRequestHandler(IP2PMediator mediator) {
 		super(mediator);
 	}
 
@@ -50,15 +49,12 @@ public class FindRequestHandler extends AbstractHandler implements IRequestHandl
 	public void handle(IPacket packet, InputStream in) throws P2PException {
 		String fileName = packet.getHeader(IProtocol.FILE_NAME);
 		String tracePath = packet.getHeader(IProtocol.TRACElIST);
-		int depth = Integer.parseInt(packet.getHeader(IProtocol.DEPTH));
+		IHost foundAt = new Host(packet.getHeader(IProtocol.FOUNDAT));
 
-		if (depth > 0) {
-			this.mediator.fireEvent(new FindEvent(fileName, depth - 1, tracePath));
-		}
-
-		File file = new File(this.mediator.getRootDirectory(), fileName);
-		if (file.exists()) {
-			this.mediator.fireEvent(new FoundPacketEvent(fileName, this.mediator.getLocalhost(), tracePath));
+		if (tracePath.length() == 0) {
+			this.mediator.fireEvent(new FoundUpdate(fileName, foundAt));
+		} else {
+			this.mediator.fireEvent(new FoundEvent(fileName, foundAt, tracePath));
 		}
 	}
 }

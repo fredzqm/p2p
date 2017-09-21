@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package edu.rosehulman.p2p.impl.handlers;
+package edu.rosehulman.p2p.impl.list;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -32,7 +32,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.rosehulman.p2p.impl.Host;
-import edu.rosehulman.p2p.impl.notification.ListingEvent;
 import edu.rosehulman.p2p.protocol.AbstractHandler;
 import edu.rosehulman.p2p.protocol.IHost;
 import edu.rosehulman.p2p.protocol.IP2PMediator;
@@ -81,7 +80,7 @@ public class ListingRequestHandler extends AbstractHandler implements IRequestHa
 				}
 			}
 
-			mediator.fireEvent(new ListingEvent(remoteHost, listing));
+			mediator.fireEvent(new ListUpdate(remoteHost, listing));
 		} catch (Exception e) {
 			throw new P2PException(e);
 		}

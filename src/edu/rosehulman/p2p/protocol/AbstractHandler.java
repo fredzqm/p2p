@@ -28,7 +28,7 @@ package edu.rosehulman.p2p.protocol;
  * @author rupakhet
  *
  */
-public abstract class AbstractHandler implements IHandler {
+public abstract class AbstractHandler {
 	protected IP2PMediator mediator;
 	
 	public AbstractHandler(IP2PMediator mediator) {

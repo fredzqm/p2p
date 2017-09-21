@@ -1,4 +1,4 @@
-package edu.rosehulman.p2p.impl.notification;
+package edu.rosehulman.p2p.impl.list;
 
 import edu.rosehulman.p2p.impl.IEventHandler;
 import edu.rosehulman.p2p.impl.Packet;
@@ -13,11 +13,11 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class RequestListEvent implements IEventHandler<RequestListEvent> {
+public class ListAction implements IEventHandler<ListAction> {
 	private IHost host;
 
     @Override
-    public void handleEvent(IP2PMediator mediator, RequestListEvent requestListEvent) {
+    public void handleEvent(IP2PMediator mediator, ListAction requestListEvent) {
         IHost remoteHost = requestListEvent.getHost();
         IStreamMonitor monitor = mediator.getIStreamMonitor(remoteHost);
 

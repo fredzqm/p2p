@@ -24,8 +24,8 @@
 
 package edu.rosehulman.p2p.impl;
 
-import edu.rosehulman.p2p.impl.notification.ConnectionEstablishedEvent;
-import edu.rosehulman.p2p.impl.notification.RequestLogEvent;
+import edu.rosehulman.p2p.impl.connection.ConnectionEstablishedEvent;
+import edu.rosehulman.p2p.impl.logs.PacketsLogEvent;
 import edu.rosehulman.p2p.protocol.IHost;
 import edu.rosehulman.p2p.protocol.IP2PMediator;
 import edu.rosehulman.p2p.protocol.IPacket;
@@ -146,6 +146,6 @@ public class P2PMediator implements IP2PMediator {
     }
 
     private void fireRequestLogChanged() {
-        this.fireEvent(new RequestLogEvent(Collections.unmodifiableCollection(this.requestLog.values())));
+        this.fireEvent(new PacketsLogEvent(Collections.unmodifiableCollection(this.requestLog.values())));
     }
 }

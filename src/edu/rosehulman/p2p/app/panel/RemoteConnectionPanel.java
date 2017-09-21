@@ -18,10 +18,10 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 
 import edu.rosehulman.p2p.impl.Host;
-import edu.rosehulman.p2p.impl.notification.RequestAttachEvent;
-import edu.rosehulman.p2p.impl.notification.RequestDetachEvent;
-import edu.rosehulman.p2p.impl.notification.RequestGetEvent;
-import edu.rosehulman.p2p.impl.notification.RequestListEvent;
+import edu.rosehulman.p2p.impl.connection.RequestAttachEvent;
+import edu.rosehulman.p2p.impl.connection.RequestDetachEvent;
+import edu.rosehulman.p2p.impl.download.GetAction;
+import edu.rosehulman.p2p.impl.list.ListAction;
 import edu.rosehulman.p2p.protocol.IHost;
 import edu.rosehulman.p2p.protocol.IP2PMediator;
 
@@ -140,7 +140,7 @@ public class RemoteConnectionPanel extends JPanel {
 				Thread thread = new Thread() {
 					public void run() {
 						try {
-							mediator.fireEvent(new RequestListEvent(remoteHost));
+							mediator.fireEvent(new ListAction(remoteHost));
 							statusPanel.postStatus("File listing request sent to " + remoteHost + "!");
 						} catch (Exception e) {
 							statusPanel.postStatus("Error sending list request to " + remoteHost + "!");
@@ -175,7 +175,7 @@ public class RemoteConnectionPanel extends JPanel {
 				Thread thread = new Thread() {
 					public void run() {
 						try {
-							mediator.fireEvent(new RequestGetEvent(remoteHost, fileName));
+							mediator.fireEvent(new GetAction(remoteHost, fileName));
 							statusPanel.postStatus("Getting file " + fileName + " from " + remoteHost + "...");
 						} catch (Exception e) {
 							statusPanel.postStatus("Error sending the get file request to " + remoteHost + "!");

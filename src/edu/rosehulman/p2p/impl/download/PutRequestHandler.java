@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package edu.rosehulman.p2p.impl.handlers;
+package edu.rosehulman.p2p.impl.download;
 
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -30,7 +30,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.rosehulman.p2p.impl.Host;
-import edu.rosehulman.p2p.impl.notification.DownloadEvent;
 import edu.rosehulman.p2p.protocol.AbstractHandler;
 import edu.rosehulman.p2p.protocol.IHost;
 import edu.rosehulman.p2p.protocol.IP2PMediator;
@@ -79,7 +78,7 @@ public class PutRequestHandler extends AbstractHandler implements IRequestHandle
 			}
 			fOut.close();
 			
-			mediator.fireEvent(new DownloadEvent(remoteHost, fileName));
+			mediator.fireEvent(new DownloadUpdate(remoteHost, fileName));
 		}
 		catch(Exception e) {
 			throw new P2PException(e);

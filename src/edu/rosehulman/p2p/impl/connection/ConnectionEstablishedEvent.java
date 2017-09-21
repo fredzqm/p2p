@@ -1,4 +1,4 @@
-package edu.rosehulman.p2p.impl.notification;
+package edu.rosehulman.p2p.impl.connection;
 
 import edu.rosehulman.p2p.protocol.IHost;
 import lombok.AllArgsConstructor;
