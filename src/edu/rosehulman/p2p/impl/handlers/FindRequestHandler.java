@@ -56,7 +56,7 @@ public class FindRequestHandler extends AbstractHandler implements IRequestHandl
 		
 		File file = new File(this.mediator.getRootDirectory(), fileName);
 		if (file.exists()) {
-			this.mediator.found(fileName, this.mediator.getLocalHost(), tracePath);
+			this.mediator.found(fileName, this.mediator.getLocalhost(), tracePath);
 		}
 	}
 }

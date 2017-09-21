@@ -131,7 +131,7 @@ public class P2PGUI implements IActivityListener, IConnectionListener, IDownload
 	}
 
 	private void initGUI() {
-		frame.setTitle("Rose P2P App (" + IProtocol.PROTOCOL + ") - Localhost [" + mediator.getLocalHost() + "]");
+		frame.setTitle("Rose P2P App (" + IProtocol.PROTOCOL + ") - Localhost [" + mediator.getLocalhost() + "]");
 		this.contentPane = (JPanel) frame.getContentPane();
 
 		this.configurePeersPanel();

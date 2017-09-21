@@ -51,7 +51,7 @@ public class ConnectionMonitor implements IConnectionMonitor {
 	public void stop() {
 		this.stop = true;
 		try {
-			IHost localhost = mediator.getLocalHost();
+			IHost localhost = mediator.getLocalhost();
 			Socket socket = new Socket(localhost.getHostAddress(), localhost.getPort());
 			socket.close();
 		}
@@ -60,7 +60,7 @@ public class ConnectionMonitor implements IConnectionMonitor {
 
 	@Override
 	public void run() {
-		IHost localHost = mediator.getLocalHost();
+		IHost localHost = mediator.getLocalhost();
 		try {
 			ServerSocket server = new ServerSocket(localHost.getPort());
 			while(true) {

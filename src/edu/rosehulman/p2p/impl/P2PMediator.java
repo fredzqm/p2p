@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -51,10 +52,11 @@ import edu.rosehulman.p2p.protocol.IStreamMonitor;
 import edu.rosehulman.p2p.protocol.P2PException;
 
 public class P2PMediator implements IP2PMediator {
-	Host localhost;
-	Map<IHost, IStreamMonitor> hostToInStreamMonitor;
-	Map<Integer, IPacket> requestLog;
-	String rootDirectory;
+	private Host localhost;
+	private Map<IHost, IStreamMonitor> hostToInStreamMonitor;
+	private Map<Integer, IPacket> requestLog;
+	private String rootDirectory;
+	private int sequence;
 
 	List<IDownloadListener> downloadListeners;
 	List<IListingListener> listingListeners;
@@ -62,8 +64,7 @@ public class P2PMediator implements IP2PMediator {
 	List<IConnectionListener> connectionListeners;
 	List<IActivityListener> activityListeners;
 	List<IFoundListener> fireFoundListeners;
-	
-	int sequence;
+
 
 	public P2PMediator(int port, String rootDirectory) throws UnknownHostException {
 		this.rootDirectory = rootDirectory;
@@ -83,13 +84,14 @@ public class P2PMediator implements IP2PMediator {
 		this.sequence = 0;
 	}
 
+	@Override
 	public synchronized int newSequenceNumber() {
 		return ++this.sequence;
 	}
 
 	@Override
-	public Host getLocalHost() {
-		return this.localhost;
+	public IHost getLocalhost() {
+		return localhost;
 	}
 
 	@Override
@@ -97,6 +99,29 @@ public class P2PMediator implements IP2PMediator {
 		return this.rootDirectory;
 	}
 
+	@Override
+	public IStreamMonitor getIStreamMonitor(IHost remoteHost) {
+		return this.hostToInStreamMonitor.get(remoteHost);
+	}
+
+	@Override
+	public Set<IHost> getPeerHosts() {
+		return this.hostToInStreamMonitor.keySet();
+	}
+
+	@Override
+	public void setDisConnectedHost(IHost remoteHost) {
+		IStreamMonitor monitor = this.hostToInStreamMonitor.remove(remoteHost);
+		Socket socket = monitor.getSocket();
+
+		try {
+			socket.close();
+		} catch (Exception e) {
+			Logger.getGlobal().log(Level.WARNING, "Error closing socket!", e);
+		}
+	}
+
+	@Override
 	public void setConnected(IHost host, IStreamMonitor monitor) {
 		this.hostToInStreamMonitor.put(host, monitor);
 		this.fireConnected(host);
@@ -104,13 +129,13 @@ public class P2PMediator implements IP2PMediator {
 
 	@Override
 	public boolean requestAttach(IHost remoteHost) throws P2PException {
-		synchronized (this.hostToInStreamMonitor) {
-			if (this.hostToInStreamMonitor.containsKey(remoteHost))
+		synchronized (this) {
+			if (getIStreamMonitor(remoteHost) != null)
 				return false;
 
 			IPacket sPacket = new Packet(IProtocol.PROTOCOL, IProtocol.ATTACH, remoteHost.toString());
-			sPacket.setHeader(IProtocol.HOST, this.localhost.getHostAddress());
-			sPacket.setHeader(IProtocol.PORT, this.localhost.getPort() + "");
+			sPacket.setHeader(IProtocol.HOST, this.getLocalhost().getHostAddress());
+			sPacket.setHeader(IProtocol.PORT, this.getLocalhost().getPort() + "");
 			int seqNum = this.newSequenceNumber();
 			sPacket.setHeader(IProtocol.SEQ_NUM, seqNum + "");
 
@@ -146,8 +171,8 @@ public class P2PMediator implements IP2PMediator {
 
 	public void requestAttachOK(IHost remoteHost, Socket socket, int seqNum) throws P2PException {
 		IPacket sPacket = new Packet(IProtocol.PROTOCOL, IProtocol.ATTACH_OK, remoteHost.toString());
-		sPacket.setHeader(IProtocol.HOST, this.localhost.getHostAddress());
-		sPacket.setHeader(IProtocol.PORT, this.localhost.getPort() + "");
+		sPacket.setHeader(IProtocol.HOST, this.getLocalhost().getHostAddress());
+		sPacket.setHeader(IProtocol.PORT, this.getLocalhost().getPort() + "");
 		sPacket.setHeader(IProtocol.SEQ_NUM, seqNum + "");
 
 		try {
@@ -166,8 +191,8 @@ public class P2PMediator implements IP2PMediator {
 
 	public void requestAttachNOK(IHost remoteHost, Socket socket, int seqNum) throws P2PException {
 		IPacket sPacket = new Packet(IProtocol.PROTOCOL, IProtocol.ATTACH_NOK, remoteHost.toString());
-		sPacket.setHeader(IProtocol.HOST, this.localhost.getHostAddress());
-		sPacket.setHeader(IProtocol.PORT, this.localhost.getPort() + "");
+		sPacket.setHeader(IProtocol.HOST, this.getLocalhost().getHostAddress());
+		sPacket.setHeader(IProtocol.PORT, this.getLocalhost().getPort() + "");
 		sPacket.setHeader(IProtocol.SEQ_NUM, seqNum + "");
 
 		try {
@@ -181,30 +206,23 @@ public class P2PMediator implements IP2PMediator {
 
 	@Override
 	public void requestDetach(IHost remoteHost) throws P2PException {
-		synchronized (this.hostToInStreamMonitor) {
-			if (!this.hostToInStreamMonitor.containsKey(remoteHost))
+		synchronized (this) {
+			if (getIStreamMonitor(remoteHost) == null)
 				return;
 
 			IPacket sPacket = new Packet(IProtocol.PROTOCOL, IProtocol.DETACH, remoteHost.toString());
-			sPacket.setHeader(IProtocol.HOST, this.localhost.getHostAddress());
-			sPacket.setHeader(IProtocol.PORT, this.localhost.getPort() + "");
+			sPacket.setHeader(IProtocol.HOST, this.getLocalhost().getHostAddress());
+			sPacket.setHeader(IProtocol.PORT, this.getLocalhost().getPort() + "");
 
-			IStreamMonitor monitor = this.hostToInStreamMonitor.remove(remoteHost);
-			Socket socket = monitor.getSocket();
-			sPacket.toStream(monitor.getOutputStream());
-
-			try {
-				socket.close();
-			} catch (Exception e) {
-				Logger.getGlobal().log(Level.WARNING, "Error closing socket!", e);
-			}
+			sPacket.toStream(getIStreamMonitor(remoteHost).getOutputStream());
+			setDisConnectedHost(remoteHost);
 			this.fireDisconnected(remoteHost);
 		}
 	}
-
+	
 	@Override
 	public void requestList(IHost remoteHost) throws P2PException {
-		IStreamMonitor monitor = this.hostToInStreamMonitor.get(remoteHost);
+		IStreamMonitor monitor = getIStreamMonitor(remoteHost);
 
 		if (monitor == null) {
 			throw new P2PException("No connection exists to " + remoteHost);
@@ -212,8 +230,8 @@ public class P2PMediator implements IP2PMediator {
 
 		int seqNum = this.newSequenceNumber();
 		IPacket packet = new Packet(IProtocol.PROTOCOL, IProtocol.LIST, remoteHost.toString());
-		packet.setHeader(IProtocol.HOST, this.localhost.getHostAddress());
-		packet.setHeader(IProtocol.PORT, this.localhost.getPort() + "");
+		packet.setHeader(IProtocol.HOST, this.getLocalhost().getHostAddress());
+		packet.setHeader(IProtocol.PORT, this.getLocalhost().getPort() + "");
 		packet.setHeader(IProtocol.SEQ_NUM, seqNum + "");
 
 		this.logRequest(seqNum, packet);
@@ -222,7 +240,7 @@ public class P2PMediator implements IP2PMediator {
 
 	@Override
 	public void requestListing(IHost remoteHost, int seqNum) throws P2PException {
-		IStreamMonitor monitor = this.hostToInStreamMonitor.get(remoteHost);
+		IStreamMonitor monitor = getIStreamMonitor(remoteHost);
 
 		if (monitor == null) {
 			throw new P2PException("No connection exists to " + remoteHost);
@@ -241,8 +259,8 @@ public class P2PMediator implements IP2PMediator {
 			byte[] payload = builder.toString().getBytes(IProtocol.CHAR_SET);
 
 			IPacket packet = new Packet(IProtocol.PROTOCOL, IProtocol.LISTING, remoteHost.toString());
-			packet.setHeader(IProtocol.HOST, this.localhost.getHostAddress());
-			packet.setHeader(IProtocol.PORT, this.localhost.getPort() + "");
+			packet.setHeader(IProtocol.HOST, this.getLocalhost().getHostAddress());
+			packet.setHeader(IProtocol.PORT, this.getLocalhost().getPort() + "");
 			packet.setHeader(IProtocol.SEQ_NUM, seqNum + "");
 			packet.setHeader(IProtocol.PAYLOAD_SIZE, payload.length + "");
 
@@ -256,7 +274,7 @@ public class P2PMediator implements IP2PMediator {
 
 	@Override
 	public void requestGet(IHost remoteHost, String file) throws P2PException {
-		IStreamMonitor monitor = this.hostToInStreamMonitor.get(remoteHost);
+		IStreamMonitor monitor = getIStreamMonitor(remoteHost);
 
 		if (monitor == null) {
 			throw new P2PException("No connection exists to " + remoteHost);
@@ -264,8 +282,8 @@ public class P2PMediator implements IP2PMediator {
 
 		int seqNum = this.newSequenceNumber();
 		IPacket packet = new Packet(IProtocol.PROTOCOL, IProtocol.GET, remoteHost.toString());
-		packet.setHeader(IProtocol.HOST, this.localhost.getHostAddress());
-		packet.setHeader(IProtocol.PORT, this.localhost.getPort() + "");
+		packet.setHeader(IProtocol.HOST, this.getLocalhost().getHostAddress());
+		packet.setHeader(IProtocol.PORT, this.getLocalhost().getPort() + "");
 		packet.setHeader(IProtocol.SEQ_NUM, seqNum + "");
 		packet.setHeader(IProtocol.FILE_NAME, file);
 
@@ -275,7 +293,7 @@ public class P2PMediator implements IP2PMediator {
 
 	@Override
 	public void requestPut(IHost remoteHost, String file, int seqNum) throws P2PException {
-		IStreamMonitor monitor = this.hostToInStreamMonitor.get(remoteHost);
+		IStreamMonitor monitor = getIStreamMonitor(remoteHost);
 
 		if (monitor == null) {
 			throw new P2PException("No connection exists to " + remoteHost);
@@ -286,15 +304,15 @@ public class P2PMediator implements IP2PMediator {
 		IPacket packet = null;
 		if (fileObj.exists() && fileObj.isFile()) {
 			packet = new Packet(IProtocol.PROTOCOL, IProtocol.PUT, remoteHost.toString());
-			packet.setHeader(IProtocol.HOST, this.localhost.getHostAddress());
-			packet.setHeader(IProtocol.PORT, this.localhost.getPort() + "");
+			packet.setHeader(IProtocol.HOST, this.getLocalhost().getHostAddress());
+			packet.setHeader(IProtocol.PORT, this.getLocalhost().getPort() + "");
 			packet.setHeader(IProtocol.SEQ_NUM, seqNum + "");
 			packet.setHeader(IProtocol.FILE_NAME, file);
 			packet.setHeader(IProtocol.PAYLOAD_SIZE, fileObj.length() + "");
 		} else {
 			packet = new Packet(IProtocol.PROTOCOL, IProtocol.GET_NOK, remoteHost.toString());
-			packet.setHeader(IProtocol.HOST, this.localhost.getHostAddress());
-			packet.setHeader(IProtocol.PORT, this.localhost.getPort() + "");
+			packet.setHeader(IProtocol.HOST, this.getLocalhost().getHostAddress());
+			packet.setHeader(IProtocol.PORT, this.getLocalhost().getPort() + "");
 			packet.setHeader(IProtocol.SEQ_NUM, seqNum + "");
 			packet.setHeader(IProtocol.FILE_NAME, file);
 		}
@@ -309,12 +327,11 @@ public class P2PMediator implements IP2PMediator {
 
 	@Override
 	public void find(String searchFile, int depth, String pathList) throws P2PException {
-		for (Map.Entry<IHost, IStreamMonitor> peer : this.hostToInStreamMonitor.entrySet()) {
-			IHost remoteHost = peer.getKey();
-			IStreamMonitor monitor = peer.getValue();
+		for (IHost remoteHost : getPeerHosts()) {
+			IStreamMonitor monitor = getIStreamMonitor(remoteHost);
 			IPacket packet = new Packet(IProtocol.PROTOCOL, IProtocol.FIND, remoteHost.toString());
 			packet.setHeader(IProtocol.DEPTH, "" + depth);
-			packet.setHeader(IProtocol.TRACElIST, pathList + "|" + this.localhost.toString());
+			packet.setHeader(IProtocol.TRACElIST, pathList + "|" + this.getLocalhost().toString());
 			packet.setHeader(IProtocol.FILE_NAME, searchFile);
 			packet.toStream(monitor.getOutputStream());
 		}
@@ -326,7 +343,7 @@ public class P2PMediator implements IP2PMediator {
 		String prevTracePath = tracePath.substring(0, index);
 		IHost remoteHost = new Host(tracePath.substring(index + 1));
 
-		IStreamMonitor monitor = this.hostToInStreamMonitor.get(remoteHost);
+		IStreamMonitor monitor = getIStreamMonitor(remoteHost);
 		if (monitor == null) {
 			throw new P2PException("No connection exists to " + remoteHost);
 		}
@@ -390,7 +407,7 @@ public class P2PMediator implements IP2PMediator {
 	public void addFoundListener(IFoundListener l) {
 		this.fireFoundListeners.add(l);
 	}
-	
+
 	@Override
 	public void fireConnected(IHost host) {
 		synchronized (this.connectionListeners) {

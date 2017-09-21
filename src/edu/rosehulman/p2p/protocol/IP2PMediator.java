@@ -26,6 +26,7 @@ package edu.rosehulman.p2p.protocol;
 
 import java.net.Socket;
 import java.util.List;
+import java.util.Set;
 
 import edu.rosehulman.p2p.impl.notification.IActivityListener;
 import edu.rosehulman.p2p.impl.notification.IConnectionListener;
@@ -35,15 +36,21 @@ import edu.rosehulman.p2p.impl.notification.IListingListener;
 import edu.rosehulman.p2p.impl.notification.IRequestLogListener;
 
 public interface IP2PMediator {
-	public IHost getLocalHost();
+	public IHost getLocalhost();
 	public String getRootDirectory();
+	int newSequenceNumber();
 	
-	public void setConnected(IHost host, IStreamMonitor monitor);
-	
-
+	// request logs
 	public IPacket getRequest(int number);
 	public void logRequest(int number, IPacket p);
 	public void completeRequest(int number);
+	
+	// stream monitors
+	IStreamMonitor getIStreamMonitor(IHost remoteHost);
+	Set<IHost> getPeerHosts();
+	void setConnected(IHost host, IStreamMonitor monitor);
+	void setDisConnectedHost(IHost remoteHost);
+	
 	
 	public boolean requestAttach(IHost host) throws P2PException;
 	public void requestAttachOK(IHost host, Socket socket, int seqNum) throws P2PException;
