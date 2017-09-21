@@ -36,6 +36,13 @@ import edu.rosehulman.p2p.impl.handlers.ListRequestHandler;
 import edu.rosehulman.p2p.impl.handlers.ListingRequestHandler;
 import edu.rosehulman.p2p.impl.handlers.PutRequestHandler;
 import edu.rosehulman.p2p.impl.handlers.PutResponseHandler;
+import edu.rosehulman.p2p.impl.notification.ActivityEvent;
+import edu.rosehulman.p2p.impl.notification.ConnectionEstablishedEvent;
+import edu.rosehulman.p2p.impl.notification.ConnectionTerminatedEvent;
+import edu.rosehulman.p2p.impl.notification.DownloadEvent;
+import edu.rosehulman.p2p.impl.notification.FoundEvent;
+import edu.rosehulman.p2p.impl.notification.ListingEvent;
+import edu.rosehulman.p2p.impl.notification.RequestLogEvent;
 import edu.rosehulman.p2p.protocol.IConnectionMonitor;
 import edu.rosehulman.p2p.protocol.IP2PMediator;
 import edu.rosehulman.p2p.protocol.IProtocol;
@@ -47,15 +54,14 @@ public class P2PApp {
 		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		mainFrame.setLocationRelativeTo(null);
 		mainFrame.setVisible(true);
-		
-		// Open configuration window		
+
+		// Open configuration window
 		P2PConfigurationWindow configWindow = new P2PConfigurationWindow(mainFrame);
 		configWindow.show();
-		
+
 		// Get the settings
 		String rootDirectory = configWindow.getRootDirectory();
 		int port = configWindow.getPort();
-		
 
 		// Configure the main worker that mediates between peers
 		IP2PMediator mediator = new P2PMediator(port, rootDirectory);
@@ -69,21 +75,35 @@ public class P2PApp {
 		protocol.setRequestHandler(IProtocol.LISTING, new ListingRequestHandler(mediator));
 		protocol.setRequestHandler(IProtocol.FIND, new FindRequestHandler(mediator));
 		protocol.setRequestHandler(IProtocol.FOUND, new FoundRequestHandler(mediator));
-		
+
 		// Let's start a connection monitor that listens for incoming connection request
 		IConnectionMonitor connectionMonitor = new ConnectionMonitor(mediator);
 		Thread runner = new Thread(connectionMonitor);
 		runner.start();
-		
-		// Configure the GUI to receive event notification
-		P2PGUI gui = new P2PGUI(mainFrame, mediator, connectionMonitor);
-		mediator.addActivityListener(gui);
-		mediator.addConnectionListener(gui);
-		mediator.addDownloadListener(gui);
-		mediator.addListingListener(gui);
-		mediator.addRequestLogListener(gui);
-		mediator.addFoundListener(gui);
 
+		// Configure the GUI to receive event notification
+		final P2PGUI gui = new P2PGUI(mainFrame, mediator, connectionMonitor);
+		mediator.registerEventHandler(ActivityEvent.class, (med, activity) -> {
+			gui.activityPerformed(activity.getMessage(), activity.getPacket());
+		});
+		mediator.registerEventHandler(ConnectionEstablishedEvent.class, (med, connectionEstablished) -> {
+			gui.connectionEstablished(connectionEstablished.getHost());
+		});
+		mediator.registerEventHandler(ConnectionTerminatedEvent.class, (med, connectionTerminated) -> {
+			gui.connectionTerminated(connectionTerminated.getHost());
+		});
+		mediator.registerEventHandler(DownloadEvent.class, (med, download) -> {
+			gui.downloadComplete(download.getHost(), download.getFile());
+		});
+		mediator.registerEventHandler(ListingEvent.class, (med, listing) -> {
+			gui.listingReceived(listing.getHost(), listing.getListings());
+		});
+		mediator.registerEventHandler(RequestLogEvent.class, (med, requestLog) -> {
+			gui.requestLogChanged(requestLog.getPackates());
+		});
+		mediator.registerEventHandler(FoundEvent.class, (med, found) -> {
+			gui.foundFile(found.getFileName(), found.getFoundAt());
+		});
 		// Show the gui
 		gui.show();
 	}

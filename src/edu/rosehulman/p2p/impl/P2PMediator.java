@@ -29,21 +29,17 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.rosehulman.p2p.impl.notification.IActivityListener;
-import edu.rosehulman.p2p.impl.notification.IConnectionListener;
-import edu.rosehulman.p2p.impl.notification.IDownloadListener;
-import edu.rosehulman.p2p.impl.notification.IFoundListener;
-import edu.rosehulman.p2p.impl.notification.IListingListener;
-import edu.rosehulman.p2p.impl.notification.IRequestLogListener;
+import com.sun.net.ssl.internal.www.protocol.https.Handler;
+
 import edu.rosehulman.p2p.protocol.IHost;
 import edu.rosehulman.p2p.protocol.IP2PMediator;
 import edu.rosehulman.p2p.protocol.IPacket;
@@ -57,31 +53,16 @@ public class P2PMediator implements IP2PMediator {
 	private Map<Integer, IPacket> requestLog;
 	private String rootDirectory;
 	private int sequence;
-
-	List<IDownloadListener> downloadListeners;
-	List<IListingListener> listingListeners;
-	List<IRequestLogListener> requestLogListeners;
-	List<IConnectionListener> connectionListeners;
-	List<IActivityListener> activityListeners;
-	List<IFoundListener> fireFoundListeners;
-
+	private Map<Class<?>, Collection<Object>> eventHandlerRegistry;
 
 	public P2PMediator(int port, String rootDirectory) throws UnknownHostException {
 		this.rootDirectory = rootDirectory;
-
 		this.localhost = new Host(InetAddress.getLocalHost().getHostAddress(), port);
 		this.hostToInStreamMonitor = Collections.synchronizedMap(new HashMap<IHost, IStreamMonitor>());
-
 		this.requestLog = Collections.synchronizedMap(new HashMap<Integer, IPacket>());
-
-		this.downloadListeners = Collections.synchronizedList(new ArrayList<IDownloadListener>());
-		this.listingListeners = Collections.synchronizedList(new ArrayList<IListingListener>());
-		this.requestLogListeners = Collections.synchronizedList(new ArrayList<IRequestLogListener>());
-		this.connectionListeners = Collections.synchronizedList(new ArrayList<IConnectionListener>());
-		this.activityListeners = Collections.synchronizedList(new ArrayList<IActivityListener>());
-		this.fireFoundListeners = Collections.synchronizedList(new ArrayList<IFoundListener>());
-
 		this.sequence = 0;
+
+		this.eventHandlerRegistry = new HashMap<>();
 	}
 
 	@Override
@@ -125,6 +106,26 @@ public class P2PMediator implements IP2PMediator {
 	public void setConnected(IHost host, IStreamMonitor monitor) {
 		this.hostToInStreamMonitor.put(host, monitor);
 		this.fireConnected(host);
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public <T> void registerEventHandler(Class<T> eventType, IEventHandler<T> hanlder) {
+		if (!this.eventHandlerRegistry.containsKey(eventType))
+			this.eventHandlerRegistry.put(eventType, new HashSet());
+		this.eventHandlerRegistry.get(eventType).add(hanlder);
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> void fireEvent(T event) {
+		Class<?> eventType = event.getClass();
+		if (this.eventHandlerRegistry.containsKey(eventType)) {
+			for (Object obj : this.eventHandlerRegistry.get(eventType)) {
+				IEventHandler<T> eventHandler = (IEventHandler<T>) obj;
+				eventHandler.handleEvent(this, event);
+			}
+		} else {
+			throw new RuntimeException("Not handler registerd for " + eventType);
+		}
 	}
 
 	@Override
@@ -219,7 +220,7 @@ public class P2PMediator implements IP2PMediator {
 			this.fireDisconnected(remoteHost);
 		}
 	}
-	
+
 	@Override
 	public void requestList(IHost remoteHost) throws P2PException {
 		IStreamMonitor monitor = getIStreamMonitor(remoteHost);
@@ -372,102 +373,5 @@ public class P2PMediator implements IP2PMediator {
 
 		if (p != null)
 			this.fireRequestLogChanged();
-	}
-
-	/**************************
-	 * Listeners Related Code
-	 *********************************/
-
-	@Override
-	public void addDownloadListener(IDownloadListener l) {
-		this.downloadListeners.add(l);
-	}
-
-	@Override
-	public void addListingListener(IListingListener l) {
-		this.listingListeners.add(l);
-	}
-
-	@Override
-	public void addRequestLogListener(IRequestLogListener l) {
-		this.requestLogListeners.add(l);
-	}
-
-	@Override
-	public void addConnectionListener(IConnectionListener l) {
-		this.connectionListeners.add(l);
-	}
-
-	@Override
-	public void addActivityListener(IActivityListener l) {
-		this.activityListeners.add(l);
-	}
-
-	@Override
-	public void addFoundListener(IFoundListener l) {
-		this.fireFoundListeners.add(l);
-	}
-
-	@Override
-	public void fireConnected(IHost host) {
-		synchronized (this.connectionListeners) {
-			for (IConnectionListener c : this.connectionListeners) {
-				c.connectionEstablished(host);
-			}
-		}
-	}
-
-	@Override
-	public void fireDisconnected(IHost host) {
-		synchronized (this.connectionListeners) {
-			for (IConnectionListener c : this.connectionListeners) {
-				c.connectionTerminated(host);
-			}
-		}
-	}
-
-	@Override
-	public void fireDownloadComplete(IHost host, String file) {
-		synchronized (this.downloadListeners) {
-			for (IDownloadListener d : this.downloadListeners) {
-				d.downloadComplete(host, file);
-			}
-		}
-	}
-
-	@Override
-	public void fireListingReceived(IHost host, List<String> listing) {
-		synchronized (this.listingListeners) {
-			for (IListingListener l : this.listingListeners) {
-				l.listingReceived(host, listing);
-			}
-		}
-	}
-
-	@Override
-	public void fireRequestLogChanged() {
-		synchronized (this.requestLogListeners) {
-			for (IRequestLogListener l : this.requestLogListeners) {
-				l.requestLogChanged(Collections.unmodifiableCollection(this.requestLog.values()));
-			}
-		}
-	}
-
-	@Override
-	public void fireActivityPerformed(String message, IPacket p) {
-		synchronized (this.activityListeners) {
-			for (IActivityListener l : this.activityListeners) {
-				l.activityPerformed(message, p);
-			}
-		}
-	}
-
-	@Override
-	public void fireFoundFile(String fileName, IHost foundAt) {
-		synchronized (this.fireFoundListeners) {
-			for (IFoundListener l : this.fireFoundListeners) {
-				l.activityPerformed(fileName, foundAt);
-			}
-		}
 	}
 }
