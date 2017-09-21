@@ -48,6 +48,10 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 
+import edu.rosehulman.p2p.app.panel.NetworkPanel;
+import edu.rosehulman.p2p.app.panel.RemoteConnectionPanel;
+import edu.rosehulman.p2p.app.panel.SearchPanel;
+import edu.rosehulman.p2p.app.panel.StatusPanel;
 import edu.rosehulman.p2p.impl.Host;
 import edu.rosehulman.p2p.impl.notification.IActivityListener;
 import edu.rosehulman.p2p.impl.notification.IConnectionListener;
@@ -70,37 +74,10 @@ public class P2PGUI implements IActivityListener, IConnectionListener, IDownload
 	JFrame frame;
 	JPanel contentPane;
 
-	JPanel newConnectionPanel;
-	JTextField hostNameField;
-	JTextField portField;
-	JButton connectButton;
 
-	JPanel peersPanel;
-	JScrollPane peerListScrollPane;
-	JList<IHost> peerList;
-	DefaultListModel<IHost> peerListModel;
-	JButton disconnectButton;
-	JButton listFileButton;
-	JScrollPane fileListingPane;
-	JList<String> fileList;
-	DefaultListModel<String> fileListModel;
-	JButton downloadDirect;
-
-	JPanel statusPanel;
-	JScrollPane statusScrollPane;
-	JTextArea statusTextArea;
-	JScrollPane requestLogScrollPane;
-	DefaultListModel<String> requestLogListModel;
-	JList<String> requestLogList;
-
-	JPanel searchFilePanel;
-	JTextField searchTermField, depthField;
-	JButton searchButton;
-	JList<IHost> searchResultList;
-	DefaultListModel<IHost> searchResultListModel;
-	JScrollPane searchResultScrollPane;
-	JButton downloadAfterSearch;
-
+	RemoteConnectionPanel remoteConnectionPanel;
+	StatusPanel statusPanel;
+	SearchPanel searchPanel;
 	JPanel networkMapPanel;
 
 	IP2PMediator mediator;
@@ -133,292 +110,62 @@ public class P2PGUI implements IActivityListener, IConnectionListener, IDownload
 	private void initGUI() {
 		frame.setTitle("Rose P2P App (" + IProtocol.PROTOCOL + ") - Localhost [" + mediator.getLocalhost() + "]");
 		this.contentPane = (JPanel) frame.getContentPane();
-
-		this.configurePeersPanel();
-		this.createNetworkMapPanel();
-		this.createSearchPanel();
-		this.createStatusPanel();
-
-		this.contentPane.add(this.peersPanel, BorderLayout.WEST);
+		
+		this.statusPanel= new StatusPanel();
+		this.remoteConnectionPanel = new RemoteConnectionPanel(frame, mediator, statusPanel);
+		this.searchPanel = new SearchPanel(frame, mediator, statusPanel);
+		this.networkMapPanel = new NetworkPanel();
+		
+		this.contentPane.add(this.remoteConnectionPanel, BorderLayout.WEST);
 		this.contentPane.add(this.networkMapPanel, BorderLayout.CENTER);
-		this.contentPane.add(this.searchFilePanel, BorderLayout.EAST);
+		this.contentPane.add(this.searchPanel, BorderLayout.EAST);
 		this.contentPane.add(this.statusPanel, BorderLayout.SOUTH);
 	}
 
-	private void configurePeersPanel() {
-		this.peersPanel = new JPanel(new BorderLayout());
-		this.peersPanel.setBorder(BorderFactory.createTitledBorder("Remote Connections"));
-
-		this.newConnectionPanel = new JPanel();
-
-		this.hostNameField = new JTextField("");
-		this.hostNameField.setColumns(25);
-
-		this.portField = new JTextField("");
-		this.portField.setColumns(8);
-
-		this.connectButton = new JButton("Connect");
-		this.newConnectionPanel.add(new JLabel("Host: "));
-		this.newConnectionPanel.add(this.hostNameField);
-		this.newConnectionPanel.add(new JLabel("Port: "));
-		this.newConnectionPanel.add(this.portField);
-		this.newConnectionPanel.add(this.connectButton);
-
-		this.connectButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					String host = hostNameField.getText();
-					int port = Integer.parseInt(portField.getText());
-					final IHost remoteHost = new Host(host, port);
-
-					Thread runner = new Thread() {
-						public void run() {
-							postStatus("Trying to connect to " + remoteHost + " ...");
-							try {
-								if (mediator.requestAttach(remoteHost)) {
-									postStatus("Connected to " + remoteHost);
-								} else {
-									postStatus("Could not connect to " + remoteHost + ". Please try again!");
-								}
-							} catch (Exception exp) {
-								postStatus("An error occured while connecting: " + exp.getMessage());
-							}
-						}
-					};
-					runner.start();
-				} catch (Exception ex) {
-					postStatus("Connection could not be established: " + ex.getMessage());
-				}
-			}
-		});
-
-		this.peersPanel.add(this.newConnectionPanel, BorderLayout.NORTH);
-
-		JPanel peerListPanel = new JPanel(new BorderLayout());
-		peerListPanel.add(new JLabel("List of Peers", JLabel.CENTER), BorderLayout.NORTH);
-		this.peerListModel = new DefaultListModel<>();
-		this.peerList = new JList<>(this.peerListModel);
-		this.peerList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		this.peerListScrollPane = new JScrollPane(this.peerList);
-		this.listFileButton = new JButton("List Files");
-		this.disconnectButton = new JButton("Disconnect");
-		peerListPanel.add(this.peerListScrollPane, BorderLayout.CENTER);
-
-		JPanel buttonPanel = new JPanel(new GridLayout());
-		buttonPanel.add(disconnectButton);
-		buttonPanel.add(listFileButton);
-		peerListPanel.add(buttonPanel, BorderLayout.SOUTH);
-
-		this.disconnectButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				IHost remoteHost = peerList.getSelectedValue();
-				if (remoteHost == null) {
-					JOptionPane.showMessageDialog(frame, "You must first select a peer from the list above!",
-							"P2P Error", JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				try {
-					mediator.requestDetach(remoteHost);
-					postStatus("Disconnected from " + remoteHost + "!");
-				} catch (Exception ex) {
-					postStatus("Error disconnecting to " + remoteHost + "!");
-				}
-			}
-		});
-
-		this.listFileButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				final IHost remoteHost = peerList.getSelectedValue();
-				if (remoteHost == null) {
-					JOptionPane.showMessageDialog(frame, "You must first select a peer from the list above!",
-							"P2P Error", JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				Thread thread = new Thread() {
-					public void run() {
-						try {
-							mediator.requestList(remoteHost);
-							postStatus("File listing request sent to " + remoteHost + "!");
-						} catch (Exception e) {
-							postStatus("Error sending list request to " + remoteHost + "!");
-						}
-					}
-				};
-				thread.start();
-			}
-		});
-
-		JPanel fileListPanel = new JPanel(new BorderLayout());
-		fileListPanel.add(new JLabel("List of files in the selected peer", JLabel.CENTER), BorderLayout.NORTH);
-		this.fileListModel = new DefaultListModel<>();
-		this.fileList = new JList<>(this.fileListModel);
-		this.fileList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		this.fileListingPane = new JScrollPane(this.fileList);
-		this.downloadDirect = new JButton("Download the selected file");
-		fileListPanel.add(this.fileListingPane, BorderLayout.CENTER);
-		fileListPanel.add(this.downloadDirect, BorderLayout.SOUTH);
-
-		this.downloadDirect.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				final IHost remoteHost = peerList.getSelectedValue();
-				final String fileName = fileList.getSelectedValue();
-				if (remoteHost == null || fileName == null) {
-					JOptionPane.showMessageDialog(frame,
-							"You must have a peer and a file selected from the lists above!", "P2P Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				Thread thread = new Thread() {
-					public void run() {
-						try {
-							mediator.requestGet(remoteHost, fileName);
-							postStatus("Getting file " + fileName + " from " + remoteHost + "...");
-						} catch (Exception e) {
-							postStatus("Error sending the get file request to " + remoteHost + "!");
-						}
-					}
-				};
-				thread.start();
-			}
-		});
-
-		this.peersPanel.add(peerListPanel, BorderLayout.WEST);
-		this.peersPanel.add(fileListPanel, BorderLayout.CENTER);
-	}
-
-	private void createStatusPanel() {
-		this.statusPanel = new JPanel(new BorderLayout());
-		this.statusPanel.setBorder(BorderFactory.createTitledBorder("Activity"));
-
-		JPanel panel = new JPanel(new BorderLayout());
-		this.statusTextArea = new JTextArea("");
-		this.statusTextArea.setRows(10);
-		this.statusScrollPane = new JScrollPane(this.statusTextArea);
-		panel.add(new JLabel("Activity Log", JLabel.CENTER), BorderLayout.NORTH);
-		panel.add(this.statusScrollPane, BorderLayout.CENTER);
-		this.statusPanel.add(panel, BorderLayout.CENTER);
-
-		panel = new JPanel(new BorderLayout());
-		this.requestLogListModel = new DefaultListModel<>();
-		this.requestLogList = new JList<>(this.requestLogListModel);
-		this.requestLogScrollPane = new JScrollPane(this.requestLogList);
-
-		panel.add(new JLabel("Request Log", JLabel.CENTER), BorderLayout.NORTH);
-		panel.add(this.requestLogScrollPane, BorderLayout.CENTER);
-		this.statusPanel.add(panel, BorderLayout.EAST);
-	}
-
-	private void createNetworkMapPanel() {
-		this.networkMapPanel = new JPanel(new BorderLayout());
-		this.networkMapPanel.setBorder(BorderFactory.createTitledBorder("Network Graph"));
-
-		this.networkMapPanel.add(new JLabel("Shown the network graph (Bonus) ..."));
-	}
-
-	private void createSearchPanel() {
-		this.searchFilePanel = new JPanel(new BorderLayout());
-		this.searchFilePanel.setBorder(BorderFactory.createTitledBorder("Network File Searching"));
-
-		JPanel top = new JPanel();
-		top.add(new JLabel("Search Term: "));
-		this.searchTermField = new JTextField("");
-		this.searchTermField.setColumns(10);
-		this.searchButton = new JButton("Search Network");
-		top.add(this.searchTermField);
-		top.add(new JLabel("Depth: "));
-		this.depthField = new JTextField("");
-		this.depthField.setColumns(7);
-		top.add(this.depthField);
-		top.add(this.searchButton);
-
-		this.searchButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				final String fileName = searchTermField.getText();
-				final Integer depth = Integer.parseInt(depthField.getText());
-				if (fileName == null || fileName == null) {
-					JOptionPane.showMessageDialog(frame,
-							"You must have a peer and a file selected from the lists above!", "P2P Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				searchResultListModel.clear();
-				Thread thread = new Thread() {
-					public void run() {
-						try {
-							mediator.find(fileName, depth, "");
-							postStatus("Getting file " + fileName + " from " + fileName + "...");
-						} catch (Exception e) {
-							e.printStackTrace();
-							postStatus("Error sending the get file request to " + fileName + "! ");
-						}
-					}
-				};
-				thread.start();
-			}
-		});
-
-		this.searchResultListModel = new DefaultListModel<>();
-		this.searchResultList = new JList<>(this.searchResultListModel);
-		this.searchResultScrollPane = new JScrollPane(this.searchResultList);
-
-		this.downloadAfterSearch = new JButton("Download the selected file");
-
-		this.searchFilePanel.add(top, BorderLayout.NORTH);
-		this.searchFilePanel.add(this.searchResultScrollPane, BorderLayout.CENTER);
-		this.searchFilePanel.add(this.downloadAfterSearch, BorderLayout.SOUTH);
-	}
 
 	@Override
 	public void requestLogChanged(Collection<IPacket> packets) {
-		this.requestLogListModel.clear();
+		this.statusPanel.getRequestLogListModel().clear();
 		int i = 0;
 		for (IPacket p : packets) {
-			this.requestLogListModel.addElement(++i + " : " + p.getCommand() + " => " + p.getObject());
+			this.statusPanel.getRequestLogListModel().addElement(++i + " : " + p.getCommand() + " => " + p.getObject());
 		}
 	}
 
 	@Override
 	public void listingReceived(IHost host, List<String> listing) {
-		this.postStatus("File listing received from " + host + "!");
-		this.fileListModel.clear();
+		this.statusPanel.postStatus("File listing received from " + host + "!");
+		this.remoteConnectionPanel.getFileListModel().clear();
 		for (String f : listing) {
-			this.fileListModel.addElement(f);
+			this.remoteConnectionPanel.getFileListModel().addElement(f);
 		}
 	}
 
 	@Override
 	public void downloadComplete(IHost host, String file) {
-		this.postStatus("Download of " + file + " from " + host + " complete!");
+		this.statusPanel.postStatus("Download of " + file + " from " + host + " complete!");
 	}
 
 	@Override
 	public void connectionEstablished(IHost host) {
-		this.peerListModel.addElement(host);
+		this.remoteConnectionPanel.getPeerListModel().addElement(host);
 	}
 
 	@Override
 	public void connectionTerminated(IHost host) {
-		this.peerListModel.removeElement(host);
+		this.remoteConnectionPanel.getPeerListModel().removeElement(host);
 	}
 
 	@Override
 	public void activityPerformed(String message, IPacket p) {
-		this.postStatus(message + p.getCommand());
+		this.statusPanel.postStatus(message + p.getCommand());
 	}
 
-	private void postStatus(String msg) {
-		this.statusTextArea.append(msg + IProtocol.LF);
-		this.statusTextArea.setCaretPosition(this.statusTextArea.getDocument().getLength());
-	}
+
 
 	@Override
 	public void activityPerformed(String fileName, IHost foundAt) {
-		if (!this.searchResultListModel.contains(foundAt))
-			this.searchResultListModel.addElement(foundAt);
+		if (!this.searchPanel.getSearchResultListModel().contains(foundAt))
+			this.searchPanel.getSearchResultListModel().addElement(foundAt);
 	}
 }
