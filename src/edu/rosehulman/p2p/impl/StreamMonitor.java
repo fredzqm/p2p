@@ -31,6 +31,7 @@ import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.rosehulman.p2p.impl.notification.RequestDetachEvent;
 import edu.rosehulman.p2p.protocol.IHost;
 import edu.rosehulman.p2p.protocol.IP2PMediator;
 import edu.rosehulman.p2p.protocol.IPacket;
@@ -43,59 +44,57 @@ public class StreamMonitor implements IStreamMonitor {
 	private Socket socket;
 	private InputStream in;
 	private OutputStream out;
-	
+
 	volatile boolean stop;
-	
+
 	public StreamMonitor(IP2PMediator mediator, IHost remoteHost, Socket socket) throws IOException {
 		this.mediator = mediator;
 		this.remoteHost = remoteHost;
-		
+
 		this.socket = socket;
 		this.in = this.socket.getInputStream();
 		this.out = this.socket.getOutputStream();
-		
+
 		this.stop = false;
 	}
-	
+
 	public Socket getSocket() {
 		return this.socket;
 	}
-	
+
 	public InputStream getInputStream() {
 		return this.in;
 	}
-	
+
 	public OutputStream getOutputStream() {
 		return this.out;
 	}
 
 	@Override
 	public void run() {
-		while(!this.stop) {
+		while (!this.stop) {
 			IPacket packet = new Packet();
 			try {
 				packet.fromStream(this.in);
 				// Note that there are handlers configured in TransportProtocol that
-				// kick-in within the packet.fromStream() method to handle the 
+				// kick-in within the packet.fromStream() method to handle the
 				// packet further
-			} 
-			catch (P2PException e) {
+			} catch (P2PException e) {
 				Logger.getGlobal().log(Level.SEVERE, "Error Receiving Packet!", e);
 				this.stop();
 			}
 		}
 	}
-	
+
 	public void stop() {
-		if(this.stop)
+		if (this.stop)
 			return;
-		
+
 		this.stop = true;
 		try {
-			this.mediator.requestDetach(this.remoteHost);
-		}
-		catch(Exception e){
-			Logger.getGlobal().log(Level.WARNING, "Error Detaching from " + this.remoteHost + "!" , e);
+			this.mediator.fireEvent(new RequestDetachEvent(remoteHost));
+		} catch (Exception e) {
+			Logger.getGlobal().log(Level.WARNING, "Error Detaching from " + this.remoteHost + "!", e);
 		}
 	}
 }

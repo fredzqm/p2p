@@ -32,6 +32,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.rosehulman.p2p.impl.Host;
+import edu.rosehulman.p2p.impl.notification.ListingEvent;
 import edu.rosehulman.p2p.protocol.AbstractHandler;
 import edu.rosehulman.p2p.protocol.IHost;
 import edu.rosehulman.p2p.protocol.IP2PMediator;
@@ -57,31 +58,31 @@ public class ListingRequestHandler extends AbstractHandler implements IRequestHa
 		IHost remoteHost = new Host(host, port);
 		int seqNum = Integer.parseInt(packet.getHeader(IProtocol.SEQ_NUM));
 		int payloadSize = Integer.parseInt(packet.getHeader(IProtocol.PAYLOAD_SIZE));
-		
+
 		IPacket rPacket = mediator.getRequest(seqNum);
-		if(rPacket == null) {
-			Logger.getGlobal().log(Level.INFO, "Ignoring listing response! The corresponding list request does not exists." );
-			return;	
+		if (rPacket == null) {
+			Logger.getGlobal().log(Level.INFO,
+					"Ignoring listing response! The corresponding list request does not exists.");
+			return;
 		}
-		
+
 		try {
 			List<String> listing = new ArrayList<>();
 
 			byte[] buffer = new byte[payloadSize];
 			in.read(buffer);
-			
+
 			String listingStr = new String(buffer, IProtocol.CHAR_SET);
 			StringTokenizer tokenizer = new StringTokenizer(listingStr);
-			while(tokenizer.hasMoreTokens()) {
+			while (tokenizer.hasMoreTokens()) {
 				String file = tokenizer.nextToken(IProtocol.LF).trim();
-				if(!file.isEmpty()) {
+				if (!file.isEmpty()) {
 					listing.add(file);
 				}
 			}
-			
-			mediator.fireListingReceived(remoteHost, listing);
-		}
-		catch(Exception e) {
+
+			mediator.fireEvent(new ListingEvent(remoteHost, listing));
+		} catch (Exception e) {
 			throw new P2PException(e);
 		}
 	}

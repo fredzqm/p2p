@@ -18,6 +18,10 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 
 import edu.rosehulman.p2p.impl.Host;
+import edu.rosehulman.p2p.impl.notification.RequestAttachEvent;
+import edu.rosehulman.p2p.impl.notification.RequestDetachEvent;
+import edu.rosehulman.p2p.impl.notification.RequestGetEvent;
+import edu.rosehulman.p2p.impl.notification.RequestListEvent;
 import edu.rosehulman.p2p.protocol.IHost;
 import edu.rosehulman.p2p.protocol.IP2PMediator;
 
@@ -27,7 +31,6 @@ public class RemoteConnectionPanel extends JPanel {
 	JTextField portField;
 	JButton connectButton;
 
-	
 	JScrollPane peerListScrollPane;
 	JList<IHost> peerList;
 	private DefaultListModel<IHost> peerListModel;
@@ -37,8 +40,8 @@ public class RemoteConnectionPanel extends JPanel {
 	JList<String> fileList;
 	private DefaultListModel<String> fileListModel;
 	JButton downloadDirect;
-	
-	public RemoteConnectionPanel(JFrame frame,IP2PMediator mediator, StatusPanel statusPanel ) {
+
+	public RemoteConnectionPanel(JFrame frame, IP2PMediator mediator, StatusPanel statusPanel) {
 		super(new BorderLayout());
 		this.setBorder(BorderFactory.createTitledBorder("Remote Connections"));
 
@@ -69,10 +72,13 @@ public class RemoteConnectionPanel extends JPanel {
 						public void run() {
 							statusPanel.postStatus("Trying to connect to " + remoteHost + " ...");
 							try {
-								if (mediator.requestAttach(remoteHost)) {
+								RequestAttachEvent requestAttachEvent = new RequestAttachEvent(remoteHost, false);
+								mediator.fireEvent(requestAttachEvent);
+								if (requestAttachEvent.isSucessfully()) {
 									statusPanel.postStatus("Connected to " + remoteHost);
 								} else {
-									statusPanel.postStatus("Could not connect to " + remoteHost + ". Please try again!");
+									statusPanel
+											.postStatus("Could not connect to " + remoteHost + ". Please try again!");
 								}
 							} catch (Exception exp) {
 								statusPanel.postStatus("An error occured while connecting: " + exp.getMessage());
@@ -113,7 +119,8 @@ public class RemoteConnectionPanel extends JPanel {
 					return;
 				}
 				try {
-					mediator.requestDetach(remoteHost);
+					RequestDetachEvent requestDetachEvent = new RequestDetachEvent(remoteHost);
+					mediator.fireEvent(requestDetachEvent);
 					statusPanel.postStatus("Disconnected from " + remoteHost + "!");
 				} catch (Exception ex) {
 					statusPanel.postStatus("Error disconnecting to " + remoteHost + "!");
@@ -133,7 +140,7 @@ public class RemoteConnectionPanel extends JPanel {
 				Thread thread = new Thread() {
 					public void run() {
 						try {
-							mediator.requestList(remoteHost);
+							mediator.fireEvent(new RequestListEvent(remoteHost));
 							statusPanel.postStatus("File listing request sent to " + remoteHost + "!");
 						} catch (Exception e) {
 							statusPanel.postStatus("Error sending list request to " + remoteHost + "!");
@@ -168,7 +175,7 @@ public class RemoteConnectionPanel extends JPanel {
 				Thread thread = new Thread() {
 					public void run() {
 						try {
-							mediator.requestGet(remoteHost, fileName);
+							mediator.fireEvent(new RequestGetEvent(remoteHost, fileName));
 							statusPanel.postStatus("Getting file " + fileName + " from " + remoteHost + "...");
 						} catch (Exception e) {
 							statusPanel.postStatus("Error sending the get file request to " + remoteHost + "!");
@@ -198,8 +205,5 @@ public class RemoteConnectionPanel extends JPanel {
 	void setPeerListModel(DefaultListModel<IHost> peerListModel) {
 		this.peerListModel = peerListModel;
 	}
-
-
-
 
 }

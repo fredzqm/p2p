@@ -26,39 +26,19 @@ package edu.rosehulman.p2p.app;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.GridLayout;
 import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Collection;
 import java.util.List;
 
-import javax.swing.BorderFactory;
-import javax.swing.DefaultListModel;
-import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
 
 import edu.rosehulman.p2p.app.panel.NetworkPanel;
 import edu.rosehulman.p2p.app.panel.RemoteConnectionPanel;
 import edu.rosehulman.p2p.app.panel.SearchPanel;
 import edu.rosehulman.p2p.app.panel.StatusPanel;
-import edu.rosehulman.p2p.impl.Host;
-import edu.rosehulman.p2p.impl.notification.IActivityListener;
-import edu.rosehulman.p2p.impl.notification.IConnectionListener;
-import edu.rosehulman.p2p.impl.notification.IDownloadListener;
-import edu.rosehulman.p2p.impl.notification.IFoundListener;
-import edu.rosehulman.p2p.impl.notification.IListingListener;
-import edu.rosehulman.p2p.impl.notification.IRequestLogListener;
 import edu.rosehulman.p2p.protocol.IConnectionMonitor;
 import edu.rosehulman.p2p.protocol.IHost;
 import edu.rosehulman.p2p.protocol.IP2PMediator;
@@ -69,11 +49,9 @@ import edu.rosehulman.p2p.protocol.IProtocol;
  * @author rupakhet
  *
  */
-public class P2PGUI implements IActivityListener, IConnectionListener, IDownloadListener, IListingListener,
-		IRequestLogListener, IFoundListener {
+public class P2PGUI {
 	JFrame frame;
 	JPanel contentPane;
-
 
 	RemoteConnectionPanel remoteConnectionPanel;
 	StatusPanel statusPanel;
@@ -110,20 +88,18 @@ public class P2PGUI implements IActivityListener, IConnectionListener, IDownload
 	private void initGUI() {
 		frame.setTitle("Rose P2P App (" + IProtocol.PROTOCOL + ") - Localhost [" + mediator.getLocalhost() + "]");
 		this.contentPane = (JPanel) frame.getContentPane();
-		
-		this.statusPanel= new StatusPanel();
+
+		this.statusPanel = new StatusPanel();
 		this.remoteConnectionPanel = new RemoteConnectionPanel(frame, mediator, statusPanel);
 		this.searchPanel = new SearchPanel(frame, mediator, statusPanel);
 		this.networkMapPanel = new NetworkPanel();
-		
+
 		this.contentPane.add(this.remoteConnectionPanel, BorderLayout.WEST);
 		this.contentPane.add(this.networkMapPanel, BorderLayout.CENTER);
 		this.contentPane.add(this.searchPanel, BorderLayout.EAST);
 		this.contentPane.add(this.statusPanel, BorderLayout.SOUTH);
 	}
 
-
-	@Override
 	public void requestLogChanged(Collection<IPacket> packets) {
 		this.statusPanel.getRequestLogListModel().clear();
 		int i = 0;
@@ -132,7 +108,6 @@ public class P2PGUI implements IActivityListener, IConnectionListener, IDownload
 		}
 	}
 
-	@Override
 	public void listingReceived(IHost host, List<String> listing) {
 		this.statusPanel.postStatus("File listing received from " + host + "!");
 		this.remoteConnectionPanel.getFileListModel().clear();
@@ -141,30 +116,23 @@ public class P2PGUI implements IActivityListener, IConnectionListener, IDownload
 		}
 	}
 
-	@Override
 	public void downloadComplete(IHost host, String file) {
 		this.statusPanel.postStatus("Download of " + file + " from " + host + " complete!");
 	}
 
-	@Override
 	public void connectionEstablished(IHost host) {
 		this.remoteConnectionPanel.getPeerListModel().addElement(host);
 	}
 
-	@Override
 	public void connectionTerminated(IHost host) {
 		this.remoteConnectionPanel.getPeerListModel().removeElement(host);
 	}
 
-	@Override
 	public void activityPerformed(String message, IPacket p) {
 		this.statusPanel.postStatus(message + p.getCommand());
 	}
 
-
-
-	@Override
-	public void activityPerformed(String fileName, IHost foundAt) {
+	public void foundFile(String fileName, IHost foundAt) {
 		if (!this.searchPanel.getSearchResultListModel().contains(foundAt))
 			this.searchPanel.getSearchResultListModel().addElement(foundAt);
 	}

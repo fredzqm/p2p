@@ -30,6 +30,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.rosehulman.p2p.impl.Host;
+import edu.rosehulman.p2p.impl.notification.DownloadEvent;
 import edu.rosehulman.p2p.protocol.AbstractHandler;
 import edu.rosehulman.p2p.protocol.IHost;
 import edu.rosehulman.p2p.protocol.IP2PMediator;
@@ -78,7 +79,7 @@ public class PutRequestHandler extends AbstractHandler implements IRequestHandle
 			}
 			fOut.close();
 			
-			mediator.fireDownloadComplete(remoteHost, fileName);
+			mediator.fireEvent(new DownloadEvent(remoteHost, fileName));
 		}
 		catch(Exception e) {
 			throw new P2PException(e);

@@ -15,6 +15,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
+import edu.rosehulman.p2p.impl.notification.FindEvent;
 import edu.rosehulman.p2p.protocol.IHost;
 import edu.rosehulman.p2p.protocol.IP2PMediator;
 
@@ -56,7 +57,7 @@ public class SearchPanel extends JPanel {
 				Thread thread = new Thread() {
 					public void run() {
 						try {
-							mediator.find(fileName, depth, "");
+							mediator.fireEvent(new FindEvent(fileName, depth, ""));
 							statusPanel.postStatus("Getting file " + fileName + " from " + fileName + "...");
 						} catch (Exception e) {
 							e.printStackTrace();

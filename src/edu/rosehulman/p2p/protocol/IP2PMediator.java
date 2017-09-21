@@ -24,60 +24,37 @@
 
 package edu.rosehulman.p2p.protocol;
 
-import java.util.Set;
-
 import edu.rosehulman.p2p.impl.IEventHandler;
 
-public interface IP2PMediator {
-	public IHost getLocalhost();
-	public String getRootDirectory();
-	int newSequenceNumber();
-	
-	// request logs
-	public IPacket getRequest(int number);
-	public void logRequest(int number, IPacket p);
-	public void completeRequest(int number);
-	
-	// stream monitors
-	IStreamMonitor getIStreamMonitor(IHost remoteHost);
-	Set<IHost> getPeerHosts();
-	void setConnected(IHost host, IStreamMonitor monitor);
-	void setDisConnectedHost(IHost remoteHost);
+import java.util.Set;
 
-	// event handler
-	<T> void registerEventHandler(Class<T> eventType, IEventHandler<T> hanlder);
-	<T> void fireEvent(T event);
-	
-//	
-//	public boolean requestAttach(IHost host) throws P2PException;
-//	public void requestAttachOK(IHost host, Socket socket, int seqNum) throws P2PException;
-//	public void requestAttachNOK(IHost host, Socket socket, int seqNum) throws P2PException;
-//
-//	public void requestDetach(IHost host) throws P2PException;
-//
-//	public void discover(int depth) throws P2PException;
-//	public void find(String searchFile, int depth, String pathList) throws P2PException;
-//	public void found(String fileName, IHost foundAt, String prevTracePath) throws P2PException;
-//
-//	public void requestList(IHost host) throws P2PException;	
-//	public void requestListing(IHost remoteHost, int seqNum) throws P2PException;
-//	
-//	public void requestGet(IHost host, String file) throws P2PException;
-//	public void requestPut(IHost remoteHost, String file, int seqNum) throws P2PException;
-//	
-//	public void addDownloadListener(IDownloadListener l);
-//	public void addListingListener(IListingListener l);
-//	public void addRequestLogListener(IRequestLogListener l);
-//	public void addConnectionListener(IConnectionListener l);
-//	public void addActivityListener(IActivityListener l);
-//	void addFoundListener(IFoundListener l);
-//	
-//	
-//	public void fireDownloadComplete(IHost host, String file);
-//	public void fireListingReceived(IHost host, List<String> listing);
-//	public void fireRequestLogChanged();
-//	public void fireConnected(IHost host);
-//	public void fireDisconnected(IHost host);
-//	public void fireActivityPerformed(String message, IPacket p);
-//	public void fireFoundFile(String fileName, IHost foundAt);
+public interface IP2PMediator {
+    // server data
+    IHost getLocalhost();
+
+    String getRootDirectory();
+
+    int newSequenceNumber();
+
+    // request logs
+    IPacket getRequest(int number);
+
+    void logRequest(int number, IPacket p);
+
+    void completeRequest(int number);
+
+    // stream monitors
+    IStreamMonitor getIStreamMonitor(IHost remoteHost);
+
+    Set<IHost> getPeerHosts();
+
+    void setConnected(IHost host, IStreamMonitor monitor);
+
+    void setDisConnectedHost(IHost remoteHost);
+
+    // event handler
+    <T> void registerEventHandler(Class<T> eventType, IEventHandler<T> hanlder);
+
+    <T> void fireEvent(T event);
+
 }
