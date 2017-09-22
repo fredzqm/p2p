@@ -84,25 +84,29 @@ public class P2PApp {
 		// Configure the GUI to receive event connection
 		final P2PGUI gui = new P2PGUI(mainFrame, mediator, connectionMonitor);
 		mediator.registerEventHandler(ActivityEvent.class, (med, activity) -> {
-			gui.activityPerformed(activity.getMessage(), activity.getPacket());
+			gui.statusPanel.activityPerformed(activity.getMessage(), activity.getPacket());
 		});
 		mediator.registerEventHandler(ConnectionEstablishedEvent.class, (med, connectionEstablished) -> {
-			gui.connectionEstablished(connectionEstablished.getHost());
+			gui.remoteConnectionPanel.connectionEstablished(connectionEstablished.getHost());
 		});
 		mediator.registerEventHandler(ConnectionTerminatedEvent.class, (med, connectionTerminated) -> {
-			gui.connectionTerminated(connectionTerminated.getHost());
+			gui.remoteConnectionPanel.connectionTerminated(connectionTerminated.getHost());
 		});
 		mediator.registerEventHandler(DownloadUpdate.class, (med, download) -> {
-			gui.downloadComplete(download.getHost(), download.getFile());
+			gui.statusPanel.downloadComplete(download.getHost(), download.getFile());
+		});
+
+		mediator.registerEventHandler(ListUpdate.class, (med, listing) -> {
+			gui.statusPanel.listingReceived(listing.getHost(), listing.getListings());
 		});
 		mediator.registerEventHandler(ListUpdate.class, (med, listing) -> {
-			gui.listingReceived(listing.getHost(), listing.getListings());
+			gui.remoteConnectionPanel.listingReceived(listing.getHost(), listing.getListings());
 		});
 		mediator.registerEventHandler(PacketsLogEvent.class, (med, requestLog) -> {
-			gui.requestLogChanged(requestLog.getPackates());
+			gui.statusPanel.requestLogChanged(requestLog.getPackates());
 		});
 		mediator.registerEventHandler(FoundUpdate.class, (med, found) -> {
-			gui.foundFile(found.getFileName(), found.getFoundAt());
+			gui.searchPanel.foundFile(found.getFileName(), found.getFoundAt());
 		});
 		// Show the gui
 		gui.show();

@@ -1,6 +1,8 @@
 package edu.rosehulman.p2p.app.panel;
 
 import java.awt.BorderLayout;
+import java.util.Collection;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
@@ -10,6 +12,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
+import edu.rosehulman.p2p.protocol.IHost;
+import edu.rosehulman.p2p.protocol.IPacket;
 import edu.rosehulman.p2p.protocol.IProtocol;
 
 public class StatusPanel extends JPanel {
@@ -52,5 +56,26 @@ public class StatusPanel extends JPanel {
 	void setRequestLogListModel(DefaultListModel<String> requestLogListModel) {
 		this.requestLogListModel = requestLogListModel;
 	}
+	
+	public void requestLogChanged(Collection<IPacket> packets) {
+		this.getRequestLogListModel().clear();
+		int i = 0;
+		for (IPacket p : packets) {
+			this.getRequestLogListModel().addElement(++i + " : " + p.getCommand() + " => " + p.getObject());
+		}
+	}
+	
+	public void downloadComplete(IHost host, String file) {
+		this.postStatus("Download of " + file + " from " + host + " complete!");
+	}
+		public void activityPerformed(String message, IPacket p) {
+			this.postStatus(message + p.getCommand());
+		}
+		
+		public void listingReceived(IHost host, List<String> listing) {
+			this.postStatus("File listing received from " + host + "!");
+			
+		}
+
 
 }

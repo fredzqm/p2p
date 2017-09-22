@@ -100,13 +100,7 @@ public class P2PGUI {
 		this.contentPane.add(this.statusPanel, BorderLayout.SOUTH);
 	}
 
-	public void requestLogChanged(Collection<IPacket> packets) {
-		this.statusPanel.getRequestLogListModel().clear();
-		int i = 0;
-		for (IPacket p : packets) {
-			this.statusPanel.getRequestLogListModel().addElement(++i + " : " + p.getCommand() + " => " + p.getObject());
-		}
-	}
+	
 
 	public void listingReceived(IHost host, List<String> listing) {
 		this.statusPanel.postStatus("File listing received from " + host + "!");
@@ -116,24 +110,8 @@ public class P2PGUI {
 		}
 	}
 
-	public void downloadComplete(IHost host, String file) {
-		this.statusPanel.postStatus("Download of " + file + " from " + host + " complete!");
-	}
 
-	public void connectionEstablished(IHost host) {
-		this.remoteConnectionPanel.getPeerListModel().addElement(host);
-	}
 
-	public void connectionTerminated(IHost host) {
-		this.remoteConnectionPanel.getPeerListModel().removeElement(host);
-	}
+	
 
-	public void activityPerformed(String message, IPacket p) {
-		this.statusPanel.postStatus(message + p.getCommand());
-	}
-
-	public void foundFile(String fileName, IHost foundAt) {
-		if (!this.searchPanel.getSearchResultListModel().contains(foundAt))
-			this.searchPanel.getSearchResultListModel().addElement(foundAt);
-	}
 }

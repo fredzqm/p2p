@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
@@ -204,6 +205,22 @@ public class RemoteConnectionPanel extends JPanel {
 
 	void setPeerListModel(DefaultListModel<IHost> peerListModel) {
 		this.peerListModel = peerListModel;
+	}
+
+	public void connectionEstablished(IHost host) {
+		this.getPeerListModel().addElement(host);
+	}
+
+	public void connectionTerminated(IHost host) {
+		this.getPeerListModel().removeElement(host);
+	}
+
+	public void listingReceived(IHost host, List<String> listing) {
+
+		this.getFileListModel().clear();
+		for (String f : listing) {
+			this.getFileListModel().addElement(f);
+		}
 	}
 
 }

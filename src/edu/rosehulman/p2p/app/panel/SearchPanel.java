@@ -121,5 +121,10 @@ public class SearchPanel extends JPanel {
 	void setSearchResultListModel(DefaultListModel<IHost> searchResultListModel) {
 		this.searchResultListModel = searchResultListModel;
 	}
+	
+	public void foundFile(String fileName, IHost foundAt) {
+		if (!this.getSearchResultListModel().contains(foundAt))
+			this.getSearchResultListModel().addElement(foundAt);
+	}
 
 }
