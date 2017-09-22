@@ -102,15 +102,6 @@ public class P2PGUI {
 
 	
 
-	public void listingReceived(IHost host, List<String> listing) {
-		this.statusPanel.postStatus("File listing received from " + host + "!");
-		this.remoteConnectionPanel.getFileListModel().clear();
-		for (String f : listing) {
-			this.remoteConnectionPanel.getFileListModel().addElement(f);
-		}
-	}
-
-
 
 	
 
