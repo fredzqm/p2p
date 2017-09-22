@@ -99,11 +99,12 @@ public class ConnectionMonitor implements IConnectionMonitor {
 
             IHost remoteHost = new Host(host, port);
             String command = packet.getCommand();
-
-            if (command.equalsIgnoreCase(IProtocol.ATTACH)) {
-                sendAttachOK(seqNum, remoteHost);
-            } else {
-                sendAttachNOK(seqNum, remoteHost);
+            synchronized (mediator) {
+                if (command.equalsIgnoreCase(IProtocol.ATTACH) && mediator.getIStreamMonitor(remoteHost) == null) {
+                    sendAttachOK(seqNum, remoteHost);
+                } else {
+                    sendAttachNOK(seqNum, remoteHost);
+                }
             }
         }
 
