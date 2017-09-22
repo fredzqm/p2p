@@ -18,8 +18,8 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 
 import edu.rosehulman.p2p.impl.Host;
-import edu.rosehulman.p2p.impl.connection.RequestAttachEvent;
-import edu.rosehulman.p2p.impl.connection.RequestDetachEvent;
+import edu.rosehulman.p2p.impl.connection.RequestAttachAction;
+import edu.rosehulman.p2p.impl.connection.RequestDetachAction;
 import edu.rosehulman.p2p.impl.download.GetAction;
 import edu.rosehulman.p2p.impl.list.ListAction;
 import edu.rosehulman.p2p.protocol.IHost;
@@ -72,7 +72,7 @@ public class RemoteConnectionPanel extends JPanel {
 						public void run() {
 							statusPanel.postStatus("Trying to connect to " + remoteHost + " ...");
 							try {
-								RequestAttachEvent requestAttachEvent = new RequestAttachEvent(remoteHost, false);
+								RequestAttachAction requestAttachEvent = new RequestAttachAction(remoteHost, false);
 								mediator.fireEvent(requestAttachEvent);
 								if (requestAttachEvent.isSucessfully()) {
 									statusPanel.postStatus("Connected to " + remoteHost);
@@ -119,7 +119,7 @@ public class RemoteConnectionPanel extends JPanel {
 					return;
 				}
 				try {
-					RequestDetachEvent requestDetachEvent = new RequestDetachEvent(remoteHost);
+					RequestDetachAction requestDetachEvent = new RequestDetachAction(remoteHost);
 					mediator.fireEvent(requestDetachEvent);
 					statusPanel.postStatus("Disconnected from " + remoteHost + "!");
 				} catch (Exception ex) {

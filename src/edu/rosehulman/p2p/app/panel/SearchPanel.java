@@ -16,7 +16,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
 import edu.rosehulman.p2p.impl.connection.ConnectionEstablishedEvent;
-import edu.rosehulman.p2p.impl.connection.RequestAttachEvent;
+import edu.rosehulman.p2p.impl.connection.RequestAttachAction;
+import edu.rosehulman.p2p.impl.connection.RequestDetachAction;
+import edu.rosehulman.p2p.impl.download.DownloadUpdate;
 import edu.rosehulman.p2p.impl.download.GetAction;
 import edu.rosehulman.p2p.impl.find.FindAction;
 import edu.rosehulman.p2p.protocol.IHost;
@@ -61,7 +63,7 @@ public class SearchPanel extends JPanel {
 				Thread thread = new Thread() {
 					public void run() {
 						try {
-							mediator.fireEvent(new FindAction(fileName, depth-1, ""));
+							mediator.fireEvent(new FindAction(fileName, depth - 1, ""));
 							statusPanel.postStatus("Getting file " + fileName + " from " + fileName + "...");
 						} catch (Exception e) {
 							e.printStackTrace();
@@ -86,18 +88,20 @@ public class SearchPanel extends JPanel {
 					public void run() {
 						String file = searchTermField.getText();
 						IHost host = searchResultList.getSelectedValue();
-					
-							try {
-								mediator.fireEvent(new RequestAttachEvent(host,false));
+						try {
+							mediator.registerOneTimeEventHandler(ConnectionEstablishedEvent.class, (med1, connectEvent) -> {
+								mediator.registerOneTimeEventHandler(DownloadUpdate.class, (med2, downLoad) -> {
+									mediator.fireEvent(new RequestDetachAction(host));
+									statusPanel.postStatus("Getting file " + file + " from " + host.toString());
+								});
 								mediator.fireEvent(new GetAction(host, file));
-								statusPanel.postStatus("Getting file " + file + " from " + host.toString());
-							}
+							});
+							mediator.fireEvent(new RequestAttachAction(host, false));
+						} catch (Exception e) {
+							e.printStackTrace();
+							statusPanel.postStatus("Error sending the get file request to " + host.toString() + "! ");
+						}
 
-							catch (Exception e) {
-								e.printStackTrace();
-								statusPanel.postStatus("Error sending the get file request to " + host.toString() + "! ");
-							}
-						
 					}
 				};
 				thread.start();

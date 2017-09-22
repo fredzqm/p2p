@@ -49,7 +49,7 @@ public class P2PMediator implements IP2PMediator {
     private Map<Integer, IPacket> requestLog;
     private String rootDirectory;
     private int sequence;
-    private Map<Class<?>, Collection<Object>> eventHandlerRegistry;
+    private Map<Class<?>, Collection<Object>> eventHandlerRegistry, eventHandlerOneTimeRegistry;
 
     public P2PMediator(int port, String rootDirectory) throws UnknownHostException {
         this.rootDirectory = rootDirectory;
@@ -59,6 +59,7 @@ public class P2PMediator implements IP2PMediator {
         this.sequence = 0;
 
         this.eventHandlerRegistry = new HashMap<>();
+        this.eventHandlerOneTimeRegistry = new HashMap<>();
     }
 
     @Override
@@ -110,6 +111,13 @@ public class P2PMediator implements IP2PMediator {
             this.eventHandlerRegistry.put(eventType, new HashSet());
         this.eventHandlerRegistry.get(eventType).add(hanlder);
     }
+    
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public <T> void registerOneTimeEventHandler(Class<T> eventType, IEventHandler<T> hanlder) {
+        if (!this.eventHandlerOneTimeRegistry.containsKey(eventType))
+            this.eventHandlerOneTimeRegistry.put(eventType, new HashSet());
+        this.eventHandlerOneTimeRegistry.get(eventType).add(hanlder);
+    }
 
     @SuppressWarnings("unchecked")
     public <T> void fireEvent(T event) {
@@ -119,6 +127,13 @@ public class P2PMediator implements IP2PMediator {
                 IEventHandler<T> eventHandler = (IEventHandler<T>) obj;
                 eventHandler.handleEvent(this, event);
             }
+        }
+        if (this.eventHandlerOneTimeRegistry.containsKey(eventType)) {
+        	for (Object obj : this.eventHandlerOneTimeRegistry.get(eventType)) {
+                IEventHandler<T> eventHandler = (IEventHandler<T>) obj;
+                eventHandler.handleEvent(this, event);
+            }
+        	this.eventHandlerOneTimeRegistry.remove(eventType);
         }
         if (event instanceof IEventHandler) {
             IEventHandler<T> handler = (IEventHandler<T>) event;

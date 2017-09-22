@@ -15,17 +15,17 @@ import edu.rosehulman.p2p.protocol.IStreamMonitor;
 
 
 
-public class RequestAttachEvent implements IEventHandler<RequestAttachEvent> {
+public class RequestAttachAction implements IEventHandler<RequestAttachAction> {
 	private IHost host;
 	private boolean sucessfully;
 
-	public RequestAttachEvent(IHost remoteHost, boolean b) {
+	public RequestAttachAction(IHost remoteHost, boolean b) {
 		host= remoteHost;
 		sucessfully = b;
 	}
 
 	@Override
-	public void handleEvent(IP2PMediator mediator, RequestAttachEvent requestAttachEvent) {
+	public void handleEvent(IP2PMediator mediator, RequestAttachAction requestAttachEvent) {
 		synchronized (mediator) {
 			IHost remoteHost = requestAttachEvent.getHost();
 			if (mediator.getIStreamMonitor(remoteHost) != null)

@@ -54,6 +54,8 @@ public interface IP2PMediator {
 
     // event handler
     <T> void registerEventHandler(Class<T> eventType, IEventHandler<T> hanlder);
+    
+    <T> void registerOneTimeEventHandler(Class<T> eventType, IEventHandler<T> hanlder);
 
     <T> void fireEvent(T event);
 

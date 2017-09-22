@@ -31,7 +31,7 @@ import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.rosehulman.p2p.impl.connection.RequestDetachEvent;
+import edu.rosehulman.p2p.impl.connection.RequestDetachAction;
 import edu.rosehulman.p2p.protocol.IHost;
 import edu.rosehulman.p2p.protocol.IP2PMediator;
 import edu.rosehulman.p2p.protocol.IPacket;
@@ -93,7 +93,7 @@ public class StreamMonitor implements IStreamMonitor {
 
 		this.stop = true;
 		try {
-			this.mediator.fireEvent(new RequestDetachEvent(remoteHost));
+			this.mediator.fireEvent(new RequestDetachAction(remoteHost));
 		} catch (Exception e) {
 			Logger.getGlobal().log(Level.WARNING, "Error Detaching from " + this.remoteHost + "!", e);
 		}

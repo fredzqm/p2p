@@ -6,23 +6,17 @@ import edu.rosehulman.p2p.protocol.IHost;
 import edu.rosehulman.p2p.protocol.IP2PMediator;
 import edu.rosehulman.p2p.protocol.IPacket;
 import edu.rosehulman.p2p.protocol.IProtocol;
-import edu.rosehulman.p2p.protocol.P2PException;
 
 
-import java.io.OutputStream;
-
-
-public class RequestDetachEvent implements IEventHandler<RequestDetachEvent> {
+public class RequestDetachAction implements IEventHandler<RequestDetachAction> {
     private IHost host;
 
-
-    public RequestDetachEvent(IHost remoteHost) {
+    public RequestDetachAction(IHost remoteHost) {
 		host = remoteHost;
 	}
 
-
 	@Override
-    public void handleEvent(IP2PMediator mediator, RequestDetachEvent event) {
+    public void handleEvent(IP2PMediator mediator, RequestDetachAction event) {
         synchronized (mediator) {
             IHost remoteHost = event.getHost();
             if (mediator.getIStreamMonitor(remoteHost) == null)
