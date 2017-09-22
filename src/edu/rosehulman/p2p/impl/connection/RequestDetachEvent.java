@@ -29,12 +29,8 @@ public class RequestDetachEvent implements IEventHandler<RequestDetachEvent> {
             sPacket.setHeader(IProtocol.HOST, mediator.getLocalhost().getHostAddress());
             sPacket.setHeader(IProtocol.PORT, mediator.getLocalhost().getPort() + "");
 
-            OutputStream outputStream = mediator.getIStreamMonitor(remoteHost).getOutputStream();
-            try {
-                sPacket.toStream(outputStream);
-            } catch (P2PException e) {
-                e.printStackTrace();
-            }
+            mediator.getIStreamMonitor(remoteHost).send(sPacket);
+
             mediator.setDisConnectedHost(remoteHost);
             mediator.fireEvent(new ConnectionTerminatedEvent(remoteHost));
         }

@@ -29,7 +29,7 @@ public class FindAction implements IEventHandler<FindAction> {
 			packet.setHeader(IProtocol.DEPTH, "" + depth);
 			packet.setHeader(IProtocol.TRACElIST, traceList + "|" + mediator.getLocalhost().toString());
 			packet.setHeader(IProtocol.FILE_NAME, fileName);
-			packet.toStream(monitor.getOutputStream());
+			monitor.send(packet);
 		}
 	}
 }

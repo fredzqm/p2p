@@ -35,6 +35,6 @@ public class GetAction implements IEventHandler<GetAction> {
         packet.setHeader(IProtocol.FILE_NAME, file);
 
         mediator.logRequest(seqNum, packet);
-        packet.toStream(monitor.getOutputStream());
+        monitor.send(packet);
     }
 }

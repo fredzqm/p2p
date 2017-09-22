@@ -35,6 +35,6 @@ public class FoundEvent implements IEventHandler<FoundEvent> {
         packet.setHeader(IProtocol.TRACElIST, prevTracePath);
         packet.setHeader(IProtocol.FOUNDAT, foundAt.toString());
         packet.setHeader(IProtocol.FILE_NAME, fileName);
-        packet.toStream(monitor.getOutputStream());
+        monitor.send(packet);
     }
 }

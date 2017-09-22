@@ -55,8 +55,8 @@ public class GetRequestHandler extends AbstractHandler implements IRequestHandle
 				reqPacket.setHeader(IProtocol.FILE_NAME, fileName);
 			}
 
-			reqPacket.toStream(monitor.getOutputStream());
-			
+			monitor.send(reqPacket);
+
 		} catch (Exception e) {
 			throw new P2PException(e);
 		}
