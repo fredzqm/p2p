@@ -8,16 +8,20 @@ import edu.rosehulman.p2p.protocol.IPacket;
 import edu.rosehulman.p2p.protocol.IProtocol;
 import edu.rosehulman.p2p.protocol.IStreamMonitor;
 import edu.rosehulman.p2p.protocol.P2PException;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 
-@Data
-@AllArgsConstructor
+
+
+
 public class GetAction implements IEventHandler<GetAction> {
     private IHost remoteHost;
     private String fileName;
 
-    @Override
+    public GetAction(IHost remoteHost2, String fileName2) {
+		remoteHost= remoteHost2;
+		fileName= fileName2;
+	}
+
+	@Override
     public void handleEvent(IP2PMediator mediator, GetAction getAction) {
         IHost remoteHost = getAction.getRemoteHost();
         String file = getAction.getFileName();
@@ -37,4 +41,14 @@ public class GetAction implements IEventHandler<GetAction> {
         mediator.logRequest(seqNum, packet);
         monitor.send(packet);
     }
+
+	private String getFileName() {
+		// TODO Auto-generated method stub
+		return fileName;
+	}
+
+	private IHost getRemoteHost() {
+		
+		return remoteHost;
+	}
 }
