@@ -7,18 +7,21 @@ import edu.rosehulman.p2p.protocol.IP2PMediator;
 import edu.rosehulman.p2p.protocol.IPacket;
 import edu.rosehulman.p2p.protocol.IProtocol;
 import edu.rosehulman.p2p.protocol.P2PException;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+
 
 import java.io.OutputStream;
 
-@Data
-@AllArgsConstructor
+
 public class RequestDetachEvent implements IEventHandler<RequestDetachEvent> {
     private IHost host;
 
 
-    @Override
+    public RequestDetachEvent(IHost remoteHost) {
+		host = remoteHost;
+	}
+
+
+	@Override
     public void handleEvent(IP2PMediator mediator, RequestDetachEvent event) {
         synchronized (mediator) {
             IHost remoteHost = event.getHost();
@@ -35,4 +38,13 @@ public class RequestDetachEvent implements IEventHandler<RequestDetachEvent> {
             mediator.fireEvent(new ConnectionTerminatedEvent(remoteHost));
         }
     }
+
+
+
+
+
+	private IHost getHost() {
+		// TODO Auto-generated method stub
+		return host;
+	}
 }

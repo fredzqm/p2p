@@ -8,17 +8,21 @@ import edu.rosehulman.p2p.protocol.IP2PMediator;
 import edu.rosehulman.p2p.protocol.IProtocol;
 import edu.rosehulman.p2p.protocol.IStreamMonitor;
 import edu.rosehulman.p2p.protocol.P2PException;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 
-@Data
-@AllArgsConstructor
+
+
 public class FoundEvent implements IEventHandler<FoundEvent> {
     private String fileName;
     private IHost foundAt;
     private String traceList;
 
-    @Override
+    public FoundEvent(String fileName2, IHost localhost, String tracePath) {
+		fileName= fileName2;
+		foundAt = localhost;
+		traceList= tracePath;
+	}
+
+	@Override
     public void handleEvent(IP2PMediator mediator, FoundEvent event) {
         assert this == event;
 

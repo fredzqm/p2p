@@ -12,14 +12,17 @@ import edu.rosehulman.p2p.protocol.IP2PMediator;
 import edu.rosehulman.p2p.protocol.IPacket;
 import edu.rosehulman.p2p.protocol.IProtocol;
 import edu.rosehulman.p2p.protocol.IStreamMonitor;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 
-@Data
-@AllArgsConstructor
+
+
 public class RequestAttachEvent implements IEventHandler<RequestAttachEvent> {
 	private IHost host;
 	private boolean sucessfully;
+
+	public RequestAttachEvent(IHost remoteHost, boolean b) {
+		host= remoteHost;
+		sucessfully = b;
+	}
 
 	@Override
 	public void handleEvent(IP2PMediator mediator, RequestAttachEvent requestAttachEvent) {
@@ -62,5 +65,15 @@ public class RequestAttachEvent implements IEventHandler<RequestAttachEvent> {
 			mediator.completeRequest(seqNum);
 			this.sucessfully = true;
 		}
+	}
+
+	private IHost getHost() {
+		// TODO Auto-generated method stub
+		return this.host;
+	}
+
+	public boolean isSucessfully() {
+		// TODO Auto-generated method stub
+		return sucessfully;
 	}
 }

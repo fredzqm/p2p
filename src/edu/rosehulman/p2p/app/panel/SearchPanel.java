@@ -15,6 +15,9 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
+import edu.rosehulman.p2p.impl.connection.ConnectionEstablishedEvent;
+import edu.rosehulman.p2p.impl.connection.RequestAttachEvent;
+import edu.rosehulman.p2p.impl.download.GetAction;
 import edu.rosehulman.p2p.impl.find.FindAction;
 import edu.rosehulman.p2p.protocol.IHost;
 import edu.rosehulman.p2p.protocol.IP2PMediator;
@@ -26,7 +29,8 @@ public class SearchPanel extends JPanel {
 	private DefaultListModel<IHost> searchResultListModel;
 	JScrollPane searchResultScrollPane;
 	JButton downloadAfterSearch;
-	public SearchPanel(JFrame frame,IP2PMediator mediator, StatusPanel statusPanel) {
+
+	public SearchPanel(JFrame frame, IP2PMediator mediator, StatusPanel statusPanel) {
 		super(new BorderLayout());
 		this.setBorder(BorderFactory.createTitledBorder("Network File Searching"));
 
@@ -74,14 +78,42 @@ public class SearchPanel extends JPanel {
 		this.searchResultScrollPane = new JScrollPane(this.searchResultList);
 
 		this.downloadAfterSearch = new JButton("Download the selected file");
+		this.downloadAfterSearch.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Thread thread = new Thread() {
+					public void run() {
+						String file = searchTermField.getText();
+						IHost host = searchResultList.getSelectedValue();
+					
+							try {
+								mediator.fireEvent(new RequestAttachEvent(host,false));
+								mediator.fireEvent(new GetAction(host, file));
+								statusPanel.postStatus("Getting file " + file + " from " + host.toString());
+							}
+
+							catch (Exception e) {
+								e.printStackTrace();
+								statusPanel.postStatus("Error sending the get file request to " + host.toString() + "! ");
+							}
+						
+					}
+				};
+				thread.start();
+
+			}
+		});
 
 		this.add(top, BorderLayout.NORTH);
 		this.add(this.searchResultScrollPane, BorderLayout.CENTER);
 		this.add(this.downloadAfterSearch, BorderLayout.SOUTH);
 	}
+
 	public DefaultListModel<IHost> getSearchResultListModel() {
 		return searchResultListModel;
 	}
+
 	void setSearchResultListModel(DefaultListModel<IHost> searchResultListModel) {
 		this.searchResultListModel = searchResultListModel;
 	}

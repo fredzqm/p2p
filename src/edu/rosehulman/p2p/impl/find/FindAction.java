@@ -7,15 +7,19 @@ import edu.rosehulman.p2p.protocol.IP2PMediator;
 import edu.rosehulman.p2p.protocol.IPacket;
 import edu.rosehulman.p2p.protocol.IProtocol;
 import edu.rosehulman.p2p.protocol.IStreamMonitor;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 
-@Data
-@AllArgsConstructor
+
+
 public class FindAction implements IEventHandler<FindAction> {
 	private String fileName;
 	private int depth;
 	private String traceList;
+
+	public FindAction(String fileName2, Integer depth2, String string) {
+		fileName=fileName2;
+		depth = depth2;
+		traceList = string;
+	}
 
 	@Override
 	public void handleEvent(IP2PMediator mediator, FindAction findAction) {
@@ -31,5 +35,20 @@ public class FindAction implements IEventHandler<FindAction> {
 			packet.setHeader(IProtocol.FILE_NAME, fileName);
 			monitor.send(packet);
 		}
+	}
+
+	private int getDepth() {
+		// TODO Auto-generated method stub
+		return depth;
+	}
+
+	private String getFileName() {
+		// TODO Auto-generated method stub
+		return fileName;
+	}
+
+	private String getTraceList() {
+		// TODO Auto-generated method stub
+		return traceList;
 	}
 }
