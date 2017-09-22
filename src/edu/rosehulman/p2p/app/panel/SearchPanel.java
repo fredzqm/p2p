@@ -57,7 +57,7 @@ public class SearchPanel extends JPanel {
 				Thread thread = new Thread() {
 					public void run() {
 						try {
-							mediator.fireEvent(new FindAction(fileName, depth, ""));
+							mediator.fireEvent(new FindAction(fileName, depth-1, ""));
 							statusPanel.postStatus("Getting file " + fileName + " from " + fileName + "...");
 						} catch (Exception e) {
 							e.printStackTrace();
